@@ -29,13 +29,41 @@ public class AdaxRemoteClient {
 
             final var token = ar.result();
             final var accessToken = token.getAccessToken();
-            webClient.getAbs(token.getApiUrl() + "/rest/v1/content")
-            .putHeader("Authorization", "Bearer " + accessToken).send(resp -> {
+            webClient.getAbs(token.getApiUrl() + "/rest/v1/content").putHeader("Authorization", "Bearer " + accessToken)
+            .send(resp -> {
                 if (resp.succeeded()) {
                     final var jsonObject = resp.result().bodyAsJsonObject();
+                    LOGGER.info("Got response: {}", jsonObject);
                     if (jsonObject != null) {
                         final var content = ContentResponse.fromJsonObject(jsonObject);
                         handler.handle(Future.succeededFuture(content));
+                    } else {
+                        handler.handle(Future.failedFuture("Adax response does not contain a json object"));
+                    }
+                } else {
+                    final var cause = resp.cause();
+                    handler.handle(Future.failedFuture(cause));
+                }
+            });
+        });
+    }
+
+    public void control(ControlRequest request, Handler<AsyncResult<ControlResponse>> handler) {
+        tokenManager.getValidToken(ar -> {
+            if (ar.failed()) {
+                handler.handle(Future.failedFuture(ar.cause()));
+                return;
+            }
+
+            final var token = ar.result();
+            final var accessToken = token.getAccessToken();
+            webClient.postAbs(token.getApiUrl() + "/rest/v1/control")
+            .putHeader("Authorization", "Bearer " + accessToken).sendJson(request, resp -> {
+                if (resp.succeeded()) {
+                    final var control = resp.result().bodyAsJson(ControlResponse.class);
+                    LOGGER.info("Got response: {}", control);
+                    if (control != null) {
+                        handler.handle(Future.succeededFuture(control));
                     } else {
                         handler.handle(Future.failedFuture("Adax response does not contain a json object"));
                     }

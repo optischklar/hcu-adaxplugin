@@ -1,8 +1,8 @@
 package de.nonnull.hcu.adaxplugin.handler;
 
+import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -10,8 +10,11 @@ import de.eq3.plugin.domain.control.ControlRequest;
 import de.eq3.plugin.domain.control.ControlResponse;
 import de.eq3.plugin.domain.error.Error;
 import de.eq3.plugin.domain.features.IFeature;
+import de.eq3.plugin.domain.features.SetPointTemperature;
+import de.eq3.plugin.serialization.Feature;
 import de.eq3.plugin.serialization.PluginMessageType;
 import de.nonnull.hcu.adaxplugin.PluginContext;
+import de.nonnull.hcu.adaxplugin.adax.ControlRequestRoom;
 import lombok.NonNull;
 
 public class ControlRequestHandler extends PluginMessageHandler<ControlRequest> {
@@ -46,28 +49,45 @@ public class ControlRequestHandler extends PluginMessageHandler<ControlRequest> 
             }
 
             final var roomConfig = config.getRoomConfigurations().get(roomId);
-            final Set<IFeature> features = request.getFeatures();
-            LOGGER.info("Features to set: {}", features);
-
             if (roomConfig == null) {
                 sendControlRequestResponse(messageId, deviceId, false,
                         new Error(CONTROL_REQUEST_FAILED, "Device not found"));
                 return;
             }
 
-            final var succeeded = true;
+            final Set<IFeature> features = request.getFeatures();
+            LOGGER.info("Features to set: {}", features);
 
-            if (succeeded) {
-                LOGGER.info("ADAX API - Successfully called api request");
+            final var setPointTempFeature = features.stream().filter(f -> f.getType() == Feature.SET_POINT_TEMPERATURE)
+                    .map(SetPointTemperature.class::cast).findAny();
 
-                sendControlRequestResponse(messageId, deviceId, true, null);
-            } else {
-                final var cause = new NotImplementedException();
-                final Error error = new Error(CONTROL_REQUEST_FAILED, "Not yet implemented");
-                LOGGER.error("ADAX API - Error calling api request, cause {}", cause.getMessage());
-
-                sendControlRequestResponse(messageId, deviceId, false, error);
+            if (setPointTempFeature.isEmpty()) {
+                sendControlRequestResponse(messageId, deviceId, false,
+                        new Error(CONTROL_REQUEST_FAILED, "Unknown features"));
+                return;
             }
+
+            final var targetTemperature = (int) ((setPointTempFeature.map(SetPointTemperature::getSetPointTemperature)
+                    .orElseThrow() + roomConfig.getSetPointTemperatureOffset()) * 100);
+
+            LOGGER.info("Setting target temperature of room {} to {}", roomId.toIdentifier(), targetTemperature);
+
+            final var controlRequestRoom = ControlRequestRoom.builder().id(roomId.getRoomId()).heatingEnabled(true)
+                    .targetTemperature(targetTemperature).build();
+
+            final var adaxRequest = new de.nonnull.hcu.adaxplugin.adax.ControlRequest(List.of(controlRequestRoom));
+            context.getAdaxClient().control(adaxRequest, ar -> {
+                if (ar.succeeded()) {
+                    LOGGER.info("ADAX API - Successfully called api request");
+                    sendControlRequestResponse(messageId, deviceId, true, null);
+                } else {
+                    final var cause = ar.cause();
+                    LOGGER.error("ADAX API - Error calling api request, cause {}", cause.getMessage(), cause);
+                    final Error error = new Error(CONTROL_REQUEST_FAILED, cause.getMessage());
+                    sendControlRequestResponse(messageId, deviceId, false, error);
+                }
+            });
+
         }, () -> {
             sendControlRequestResponse(messageId, deviceId, false,
                     new Error(CONTROL_REQUEST_FAILED, "No configuration present"));
