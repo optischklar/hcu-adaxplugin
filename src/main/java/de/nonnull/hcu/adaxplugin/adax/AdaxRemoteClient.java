@@ -1,13 +1,21 @@
 package de.nonnull.hcu.adaxplugin.adax;
 
+import java.util.List;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import de.nonnull.hcu.adaxplugin.adax.model.ContentResponse;
+import de.nonnull.hcu.adaxplugin.adax.model.ControlRequest;
+import de.nonnull.hcu.adaxplugin.adax.model.ControlRequestRoom;
+import de.nonnull.hcu.adaxplugin.adax.model.ControlResponse;
+import de.nonnull.hcu.adaxplugin.config.RoomId;
 import de.nonnull.hcu.adaxplugin.service.PersistenceService;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.ext.web.client.WebClient;
+import lombok.NonNull;
 
 public class AdaxRemoteClient {
     private static final Logger LOGGER = LogManager.getLogger(AdaxRemoteClient.class);
@@ -32,10 +40,9 @@ public class AdaxRemoteClient {
             webClient.getAbs(token.getApiUrl() + "/rest/v1/content").putHeader("Authorization", "Bearer " + accessToken)
             .send(resp -> {
                 if (resp.succeeded()) {
-                    final var jsonObject = resp.result().bodyAsJsonObject();
-                    LOGGER.info("Got response: {}", jsonObject);
-                    if (jsonObject != null) {
-                        final var content = ContentResponse.fromJsonObject(jsonObject);
+                    final var content = resp.result().bodyAsJson(ContentResponse.class);
+                    LOGGER.info("Got response: {}", content);
+                    if (content != null) {
                         handler.handle(Future.succeededFuture(content));
                     } else {
                         handler.handle(Future.failedFuture("Adax response does not contain a json object"));
@@ -46,6 +53,15 @@ public class AdaxRemoteClient {
                 }
             });
         });
+    }
+
+    public void controlRoom(@NonNull RoomId roomId, boolean heatingEnabled, int targetTemperature,
+            Handler<AsyncResult<ControlResponse>> handler) {
+        final var controlRequestRoom = ControlRequestRoom.builder().id(roomId.getRoomId())
+                .heatingEnabled(heatingEnabled)
+                .targetTemperature(targetTemperature).build();
+        final var request = new ControlRequest(List.of(controlRequestRoom));
+        control(request, handler);
     }
 
     public void control(ControlRequest request, Handler<AsyncResult<ControlResponse>> handler) {

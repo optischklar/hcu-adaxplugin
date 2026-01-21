@@ -8,11 +8,11 @@ import lombok.Value;
 
 @Value
 public class RoomId {
-    private final int homeId;
-    private final int roomId;
+    private final long homeId;
+    private final long roomId;
 
     @JsonCreator
-    public RoomId(@JsonProperty("homeId") int aHomeId, @JsonProperty("roomId") int aRoomId) {
+    public RoomId(@JsonProperty("homeId") long aHomeId, @JsonProperty("roomId") long aRoomId) {
         homeId = aHomeId;
         roomId = aRoomId;
     }

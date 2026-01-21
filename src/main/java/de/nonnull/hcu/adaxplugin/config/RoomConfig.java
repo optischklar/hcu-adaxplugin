@@ -6,8 +6,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import de.eq3.plugin.serialization.DeviceType;
-import de.nonnull.hcu.adaxplugin.adax.Home;
-import de.nonnull.hcu.adaxplugin.adax.Room;
+import de.nonnull.hcu.adaxplugin.adax.model.Home;
+import de.nonnull.hcu.adaxplugin.adax.model.Room;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;

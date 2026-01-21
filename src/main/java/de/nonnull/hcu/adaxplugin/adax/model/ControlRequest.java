@@ -1,4 +1,4 @@
-package de.nonnull.hcu.adaxplugin.adax;
+package de.nonnull.hcu.adaxplugin.adax.model;
 
 import java.util.List;
 

@@ -110,7 +110,7 @@ public class ConfigTemplateRequestHandler extends PluginMessageHandler<ConfigTem
             createRoomPropertyTemplates(roomConfig, groupId).forEach(properties::put);
             final var group = new GroupTemplate(
                     "Room %s, %s".formatted(roomId.toIdentifier(), roomConfig.getDisplayName()));
-            group.setOrder(roomId.getRoomId());
+            group.setOrder((int) roomId.getRoomId());
             groups.put(groupId, group);
             roomIds.add(roomId.toIdentifier());
         });

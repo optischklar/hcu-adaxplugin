@@ -1,6 +1,5 @@
 package de.nonnull.hcu.adaxplugin.handler;
 
-import java.util.List;
 import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
@@ -11,10 +10,12 @@ import de.eq3.plugin.domain.control.ControlResponse;
 import de.eq3.plugin.domain.error.Error;
 import de.eq3.plugin.domain.features.IFeature;
 import de.eq3.plugin.domain.features.SetPointTemperature;
+import de.eq3.plugin.serialization.DeviceType;
 import de.eq3.plugin.serialization.Feature;
 import de.eq3.plugin.serialization.PluginMessageType;
 import de.nonnull.hcu.adaxplugin.PluginContext;
-import de.nonnull.hcu.adaxplugin.adax.ControlRequestRoom;
+import de.nonnull.hcu.adaxplugin.adax.model.ControlResponseRoom;
+import de.nonnull.hcu.adaxplugin.adax.model.ControlStatus;
 import lombok.NonNull;
 
 public class ControlRequestHandler extends PluginMessageHandler<ControlRequest> {
@@ -48,6 +49,13 @@ public class ControlRequestHandler extends PluginMessageHandler<ControlRequest> 
                 return;
             }
 
+            final var deviceType = context.getDeviceService().parseDeviceType(deviceId).orElse(null);
+            if (deviceType != DeviceType.THERMOSTAT) {
+                sendControlRequestResponse(messageId, deviceId, false,
+                        new Error(CONTROL_REQUEST_FAILED, "Device of " + deviceType + " not supported"));
+                return;
+            }
+
             final var roomConfig = config.getRoomConfigurations().get(roomId);
             if (roomConfig == null) {
                 sendControlRequestResponse(messageId, deviceId, false,
@@ -72,14 +80,19 @@ public class ControlRequestHandler extends PluginMessageHandler<ControlRequest> 
 
             LOGGER.info("Setting target temperature of room {} to {}", roomId.toIdentifier(), targetTemperature);
 
-            final var controlRequestRoom = ControlRequestRoom.builder().id(roomId.getRoomId()).heatingEnabled(true)
-                    .targetTemperature(targetTemperature).build();
-
-            final var adaxRequest = new de.nonnull.hcu.adaxplugin.adax.ControlRequest(List.of(controlRequestRoom));
-            context.getAdaxClient().control(adaxRequest, ar -> {
+            context.getAdaxClient().controlRoom(roomId, true, targetTemperature, ar -> {
                 if (ar.succeeded()) {
-                    LOGGER.info("ADAX API - Successfully called api request");
-                    sendControlRequestResponse(messageId, deviceId, true, null);
+                    final var response = ar.result();
+                    LOGGER.info("ADAX API - Successfully called api request. Response: {}", response);
+                    final var status = response.getRooms().stream().filter(r -> r.getId() == roomId.getRoomId())
+                            .map(ControlResponseRoom::getStatus).findAny();
+                    if (status.filter(s -> s == ControlStatus.OK).isPresent()) {
+                        sendControlRequestResponse(messageId, deviceId, true, null);
+                    } else {
+                        final Error error = new Error(CONTROL_REQUEST_FAILED,
+                                status.map(ControlStatus::name).orElse("not found"));
+                        sendControlRequestResponse(messageId, deviceId, false, error);
+                    }
                 } else {
                     final var cause = ar.cause();
                     LOGGER.error("ADAX API - Error calling api request, cause {}", cause.getMessage(), cause);
