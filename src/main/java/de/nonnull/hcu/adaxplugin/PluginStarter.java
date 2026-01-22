@@ -25,6 +25,7 @@ import de.nonnull.hcu.adaxplugin.handler.ControlRequestHandler;
 import de.nonnull.hcu.adaxplugin.handler.DeviceInclusionExclusionHandler;
 import de.nonnull.hcu.adaxplugin.handler.DiscoverRequestHandler;
 import de.nonnull.hcu.adaxplugin.handler.HmipSystemResponseHandler;
+import de.nonnull.hcu.adaxplugin.handler.PeriodicHandler;
 import de.nonnull.hcu.adaxplugin.handler.PluginStateRequestHandler;
 import de.nonnull.hcu.adaxplugin.handler.StatusRequestHandler;
 import de.nonnull.hcu.adaxplugin.service.DeviceService;
@@ -96,13 +97,7 @@ public class PluginStarter {
                     sendPluginReadinessStatus(status);
                     // sendHmipSystemRequest();
 
-                    vertx.setPeriodic(10_000, 60_000, id -> {
-                        context.getPersistenceService().getConfiguration().ifPresent(config -> {
-                            LOGGER.info("Periodic");
-                            // messageService.queryAdaxAndSendStatusResponse(config,
-                            // UUID.randomUUID().toString(), config.getIncludedDevices());
-                        });
-                    });
+                    vertx.setPeriodic(60_000, new PeriodicHandler(vertx, context));
                 }).onFailure(throwable -> {
                     LOGGER.error("SYSTEM: Error starting verticles", throwable);
                     sendPluginReadinessStatus(PluginReadinessStatus.ERROR);
