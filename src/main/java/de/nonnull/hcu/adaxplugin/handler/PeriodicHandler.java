@@ -58,10 +58,15 @@ public class PeriodicHandler implements Handler<Long> {
                 return;
             }
 
+            final var valuesCache = context.getRoomMeasuringValuesCache();
+
             final var content = ar.result();
             final var devices = context.getDeviceService().createDevices(actualTemperatureRooms, content)
                     .filter(this::hasActualTemperature)
+                    .filter(valuesCache::actualTemperatureHasChanged)
                     .collect(Collectors.toSet());
+
+            valuesCache.putAdaxValuesFromContent(content);
 
             devices.forEach(this::sendStatusEvent);
         });

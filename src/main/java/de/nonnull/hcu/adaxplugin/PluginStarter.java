@@ -1,26 +1,22 @@
 package de.nonnull.hcu.adaxplugin;
 
-import static de.nonnull.hcu.adaxplugin.PluginContext.PLUGIN_ID;
 import static de.nonnull.hcu.adaxplugin.PluginContext.PLUGIN_NAME;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
-import java.util.UUID;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import de.eq3.plugin.domain.control.HmipSystemRequest;
 import de.eq3.plugin.domain.inclusion.ExclusionEvent;
 import de.eq3.plugin.domain.inclusion.InclusionEvent;
 import de.eq3.plugin.domain.plugin.PluginReadinessStatus;
 import de.eq3.plugin.serialization.PluginMessage;
-import de.eq3.plugin.serialization.PluginMessageType;
 import de.nonnull.hcu.adaxplugin.adax.AdaxRemoteClient;
 import de.nonnull.hcu.adaxplugin.handler.ConfigTemplateRequestHandler;
 import de.nonnull.hcu.adaxplugin.handler.ConfigUpdateRequestHandler;
+import de.nonnull.hcu.adaxplugin.handler.ControlAdaxVerticle;
 import de.nonnull.hcu.adaxplugin.handler.ControlRequestHandler;
 import de.nonnull.hcu.adaxplugin.handler.DeviceInclusionExclusionHandler;
 import de.nonnull.hcu.adaxplugin.handler.DiscoverRequestHandler;
@@ -31,6 +27,7 @@ import de.nonnull.hcu.adaxplugin.handler.StatusRequestHandler;
 import de.nonnull.hcu.adaxplugin.service.DeviceService;
 import de.nonnull.hcu.adaxplugin.service.PersistenceService;
 import de.nonnull.hcu.adaxplugin.service.PluginStateService;
+import de.nonnull.hcu.adaxplugin.service.RoomMeasuringValuesCache;
 import de.nonnull.hcu.adaxplugin.ws.PluginWebsocketClient;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
@@ -53,8 +50,14 @@ public class PluginStarter {
         final var adaxClient = new AdaxRemoteClient(WebClient.create(vertx), persistenceService);
         final var deviceService = new DeviceService();
         final var pluginStateService = new PluginStateService(persistenceService);
-        context = PluginContext.builder().persistenceService(persistenceService).adaxClient(adaxClient)
-                .deviceService(deviceService).pluginStateService(pluginStateService).build();
+        final var roomMeasuringValuesCache = new RoomMeasuringValuesCache(deviceService);
+        context = PluginContext.builder()
+                .persistenceService(persistenceService)
+                .adaxClient(adaxClient)
+                .deviceService(deviceService)
+                .pluginStateService(pluginStateService)
+                .roomMeasuringValuesCache(roomMeasuringValuesCache)
+                .build();
     }
 
     public static void main(String[] args) throws IOException {
@@ -89,33 +92,23 @@ public class PluginStarter {
                         vertx.deployVerticle(() -> new ControlRequestHandler(context), new DeploymentOptions()),
                         vertx.deployVerticle(() -> new StatusRequestHandler(context), new DeploymentOptions()),
                         vertx.deployVerticle(() -> new DiscoverRequestHandler(context), new DeploymentOptions()),
-                        vertx.deployVerticle(() -> new HmipSystemResponseHandler(context), new DeploymentOptions()))))
-                .onSuccess(future -> {
-                    LOGGER.info("All verticles started successfully");
-                    final var status = stateService.calculatePluginReadinessStatus();
-                    LOGGER.info("Plugin status: {}", status);
-                    sendPluginReadinessStatus(status);
-                    // sendHmipSystemRequest();
+                        vertx.deployVerticle(() -> new HmipSystemResponseHandler(context), new DeploymentOptions()),
+                        vertx.deployVerticle(() -> new ControlAdaxVerticle(context), new DeploymentOptions()))))
+        .onSuccess(future -> {
+            LOGGER.info("All verticles started successfully");
+            final var status = stateService.calculatePluginReadinessStatus();
+            LOGGER.info("Plugin status: {}", status);
+            sendPluginReadinessStatus(status);
 
-                    vertx.setPeriodic(60_000, new PeriodicHandler(vertx, context));
-                }).onFailure(throwable -> {
-                    LOGGER.error("SYSTEM: Error starting verticles", throwable);
-                    sendPluginReadinessStatus(PluginReadinessStatus.ERROR);
-                });
+            vertx.setPeriodic(60_000, new PeriodicHandler(vertx, context));
+        }).onFailure(throwable -> {
+            LOGGER.error("SYSTEM: Error starting verticles", throwable);
+            sendPluginReadinessStatus(PluginReadinessStatus.ERROR);
+        });
     }
 
     private void sendPluginReadinessStatus(PluginReadinessStatus status) {
         final var message = context.getPluginStateService().createPluginStateResponseMessage(status);
-        sendMessage(message);
-    }
-
-    private void sendHmipSystemRequest() {
-        final var request = new HmipSystemRequest();
-        request.setPath("/hmip/home/getSystemState");
-        request.setBody(Map.of());
-        final var message = new PluginMessage<>(UUID.randomUUID().toString(), PLUGIN_ID,
-                PluginMessageType.HMIP_SYSTEM_REQUEST, request);
-
         sendMessage(message);
     }
 

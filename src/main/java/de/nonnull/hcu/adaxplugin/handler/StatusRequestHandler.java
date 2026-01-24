@@ -43,6 +43,7 @@ public class StatusRequestHandler extends PluginMessageHandler<StatusRequest> {
                 }
 
                 final var content = ar.result();
+                context.getRoomMeasuringValuesCache().putAdaxValuesFromContent(content);
                 final var roomConfigs = config.getRoomConfigurations();
                 final var requestedDeviceIds = Optional.ofNullable(request.getDeviceIds()).orElse(Set.of());
                 final var devices = context.getDeviceService()

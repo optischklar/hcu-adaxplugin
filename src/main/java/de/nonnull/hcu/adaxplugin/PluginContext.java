@@ -6,6 +6,7 @@ import de.nonnull.hcu.adaxplugin.adax.AdaxRemoteClient;
 import de.nonnull.hcu.adaxplugin.service.DeviceService;
 import de.nonnull.hcu.adaxplugin.service.PersistenceService;
 import de.nonnull.hcu.adaxplugin.service.PluginStateService;
+import de.nonnull.hcu.adaxplugin.service.RoomMeasuringValuesCache;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +33,8 @@ public class PluginContext {
     private final PluginStateService pluginStateService;
     @NonNull
     private final AtomicReference<String> webSocketHandlerIdRef = new AtomicReference<String>();
+    @NonNull
+    private final RoomMeasuringValuesCache roomMeasuringValuesCache;
 
     public String getAuthToken() {
         final var propertyToken = System.getProperty(TOKEN_PROPERTY, null);

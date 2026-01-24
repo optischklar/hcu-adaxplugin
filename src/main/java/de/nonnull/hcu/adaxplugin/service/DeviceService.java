@@ -96,7 +96,7 @@ public class DeviceService {
         return device;
     }
 
-    private Double convertTemperature(Integer adaxValue) {
+    public Double convertTemperature(Integer adaxValue) {
         if (adaxValue == null) {
             return null;
         }

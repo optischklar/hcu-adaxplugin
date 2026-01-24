@@ -71,7 +71,7 @@ public class PluginWebsocketClient extends AbstractVerticle {
 
             webSocket.handler(buffer -> {
                 final PluginMessage<?> message = buffer.toJsonObject().mapTo(PluginMessage.class);
-                LOGGER.info("Received WS message {}", message);
+                LOGGER.trace("Received WS message {}", message);
                 vertx.eventBus().send(message.getType().getMappingClazz().getName(), JsonObject.mapFrom(message));
             });
 

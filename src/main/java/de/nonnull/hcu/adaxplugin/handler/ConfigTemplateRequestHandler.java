@@ -86,6 +86,7 @@ public class ConfigTemplateRequestHandler extends PluginMessageHandler<ConfigTem
                 context.getAdaxClient().getContent(ar -> {
                     if (ar.succeeded()) {
                         final var content = ar.result();
+                        context.getRoomMeasuringValuesCache().putAdaxValuesFromContent(content);
                         final var roomConfigs = RoomConfig.createRoomConfigs(content.getHomes(), content.getRooms());
                         addRoomTemplates(properties, groups, roomConfigs);
                     }

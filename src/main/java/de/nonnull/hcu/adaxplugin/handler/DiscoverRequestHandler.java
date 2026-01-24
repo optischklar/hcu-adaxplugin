@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import de.eq3.plugin.domain.control.HmipSystemRequest;
 import de.eq3.plugin.domain.device.Device;
 import de.eq3.plugin.domain.discover.DiscoverRequest;
 import de.eq3.plugin.domain.discover.DiscoverResponse;
@@ -53,6 +54,7 @@ public class DiscoverRequestHandler extends PluginMessageHandler<DiscoverRequest
                 }
 
                 final var content = ar.result();
+                context.getRoomMeasuringValuesCache().putAdaxValuesFromContent(content);
                 final var devices = context.getDeviceService()
                         .createDevices(config.getRoomConfigurations().values(), content)
                         .collect(Collectors.toSet());
@@ -65,6 +67,7 @@ public class DiscoverRequestHandler extends PluginMessageHandler<DiscoverRequest
                     deleteInfoMessage();
                 }
                 sendSuccessResponse(messageId, devices);
+                sendHmipSystemRequest();
             });
         }, () -> {
             LOGGER.error("No configuration present");
@@ -103,6 +106,14 @@ public class DiscoverRequestHandler extends PluginMessageHandler<DiscoverRequest
         final Error error = new Error("DISCOVER_REQUEST_FAILED", errorMessage);
         final var message = createMessage(requestId, PluginMessageType.DISCOVER_RESPONSE,
                 new DiscoverResponse(false, null, error));
+        sendMessage(message);
+    }
+
+    private void sendHmipSystemRequest() {
+        final var request = new HmipSystemRequest();
+        request.setPath("/hmip/home/getSystemState");
+        request.setBody(Map.of());
+        final var message = createMessage(UUID.randomUUID().toString(), PluginMessageType.HMIP_SYSTEM_REQUEST, request);
         sendMessage(message);
     }
 }
