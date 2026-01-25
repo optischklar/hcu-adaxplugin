@@ -75,8 +75,8 @@ public class ControlRequestHandler extends PluginMessageHandler<ControlRequest> 
                 return;
             }
 
-            final var targetTemperature = (int) ((setPointTempFeature.map(SetPointTemperature::getSetPointTemperature)
-                    .orElseThrow() + roomConfig.getSetPointTemperatureOffset()) * 100);
+            final var targetTemperature = context.getConversionService().convertHcuSetPointTemperatureToAdaxTargetTemperature(
+                    roomConfig, setPointTempFeature.get().getSetPointTemperature());
 
             LOGGER.info("Setting target temperature of room {} to {}", roomId.toIdentifier(), targetTemperature);
 

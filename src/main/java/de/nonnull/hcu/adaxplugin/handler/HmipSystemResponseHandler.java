@@ -8,7 +8,6 @@ import org.apache.logging.log4j.Logger;
 import de.eq3.plugin.domain.control.HmipSystemResponse;
 import de.eq3.plugin.serialization.DeviceType;
 import de.nonnull.hcu.adaxplugin.PluginContext;
-import de.nonnull.hcu.adaxplugin.service.HcuRoomMeasuringValues;
 import io.vertx.core.json.JsonObject;
 import lombok.NonNull;
 
@@ -28,7 +27,6 @@ public class HmipSystemResponseHandler extends PluginMessageHandler<HmipSystemRe
         LOGGER.trace("Incoming Hmip system response: {}", response);
 
         final var deviceService = context.getDeviceService();
-        final var valuesCache = context.getRoomMeasuringValuesCache();
 
         final var body = JsonObject.mapFrom(response.getBody());
         final var groups = body.getJsonObject("groups");
@@ -69,14 +67,7 @@ public class HmipSystemResponseHandler extends PluginMessageHandler<HmipSystemRe
                     continue;
                 }
 
-                final var values = HcuRoomMeasuringValues.fromGroupJsonObject(group);
-                valuesCache.putHcuValues(roomId, values);
-
-                final var adaxEvent = ControlAdaxEvent.builder()
-                        .roomId(roomId)
-                        .heatingEnabled(!HcuRoomMeasuringValues.WINDOW_STATE_OPEN.equals(values.getWindowState()))
-                        .setPointTemperature(values.getSetPointTemperature())
-                        .build();
+                final var adaxEvent = new SyncAdaxHeatingEvent(roomId, group);
                 publish(adaxEvent);
 
                 handledRooms++;

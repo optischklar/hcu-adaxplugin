@@ -3,6 +3,7 @@ package de.nonnull.hcu.adaxplugin;
 import java.util.concurrent.atomic.AtomicReference;
 
 import de.nonnull.hcu.adaxplugin.adax.AdaxRemoteClient;
+import de.nonnull.hcu.adaxplugin.service.ConversionService;
 import de.nonnull.hcu.adaxplugin.service.DeviceService;
 import de.nonnull.hcu.adaxplugin.service.PersistenceService;
 import de.nonnull.hcu.adaxplugin.service.PluginStateService;
@@ -35,6 +36,8 @@ public class PluginContext {
     private final AtomicReference<String> webSocketHandlerIdRef = new AtomicReference<String>();
     @NonNull
     private final RoomMeasuringValuesCache roomMeasuringValuesCache;
+    @NonNull
+    private final ConversionService conversionService;
 
     public String getAuthToken() {
         final var propertyToken = System.getProperty(TOKEN_PROPERTY, null);

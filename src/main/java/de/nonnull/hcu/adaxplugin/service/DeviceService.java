@@ -27,7 +27,9 @@ import de.nonnull.hcu.adaxplugin.config.ActualTemperatureHandling;
 import de.nonnull.hcu.adaxplugin.config.RoomConfig;
 import de.nonnull.hcu.adaxplugin.config.RoomId;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class DeviceService {
     private static final Logger LOGGER = LogManager.getLogger(DeviceService.class);
 
@@ -35,6 +37,8 @@ public class DeviceService {
     private static final String SUFFIX_CLIMATE_SENSOR = "-C";
 
     private static final String FIRMWARE_VERSION = "1.0.0";
+
+    private final ConversionService conversionService;
 
     public Stream<Device> createDevices(@NonNull Collection<RoomConfig> roomConfigs, @NonNull ContentResponse content) {
         final var idHomeMap = content.getHomes().stream().collect(Collectors.toMap(Home::getId, Function.identity()));
@@ -96,23 +100,8 @@ public class DeviceService {
         return device;
     }
 
-    public Double convertTemperature(Integer adaxValue) {
-        if (adaxValue == null) {
-            return null;
-        }
-        final var hcuValue = adaxValue / 100d;
-        return Math.clamp(hcuValue, -50d, 60d);
-    }
-
-    public Device copyOf(@NonNull Device other) {
-        final var device = new Device();
-        device.setDeviceId(other.getDeviceId());
-        device.setDeviceType(other.getDeviceType());
-        device.setFeatures(Set.copyOf(other.getFeatures()));
-        device.setFirmwareVersion(other.getFirmwareVersion());
-        device.setFriendlyName(other.getFriendlyName());
-        device.setModelType(other.getModelType());
-        return device;
+    private Double convertTemperature(Integer adaxValue) {
+        return conversionService.convertAdaxToHcuTemperature(adaxValue);
     }
 
     private String createDeviceId(RoomId id, String suffix) {

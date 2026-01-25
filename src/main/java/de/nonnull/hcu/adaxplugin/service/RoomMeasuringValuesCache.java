@@ -1,6 +1,7 @@
 package de.nonnull.hcu.adaxplugin.service;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -17,7 +18,6 @@ import de.eq3.plugin.serialization.Feature;
 import de.nonnull.hcu.adaxplugin.adax.model.ContentResponse;
 import de.nonnull.hcu.adaxplugin.adax.model.Home;
 import de.nonnull.hcu.adaxplugin.config.RoomId;
-import de.nonnull.hcu.adaxplugin.handler.PeriodicHandler;
 import lombok.Data;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -25,9 +25,10 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class RoomMeasuringValuesCache {
 
-    private static final Logger LOGGER = LogManager.getLogger(PeriodicHandler.class);
+    private static final Logger LOGGER = LogManager.getLogger(RoomMeasuringValuesCache.class);
 
     private final DeviceService deviceService;
+    private final ConversionService conversionService;
 
     @Data
     private static class Entry {
@@ -45,13 +46,14 @@ public class RoomMeasuringValuesCache {
             final var values = AdaxRoomMeasuringValues.fromRoom(room);
             putAdaxValues(roomId, values);
         });
-        LOGGER.info("Updated cached ADAX values of {} rooms.", content.getRooms().size());
+        LOGGER.debug("Updated cached ADAX values of {} rooms.", content.getRooms().size());
     }
 
     public void putAdaxValues(@NonNull RoomId roomId, AdaxRoomMeasuringValues values) {
         synchronized (roomId) {
             final var entry = cache.computeIfAbsent(roomId, k -> new Entry());
             entry.setAdaxValues(values);
+            LOGGER.debug("Put ADAX values for room {}", roomId);
         }
     }
 
@@ -59,6 +61,8 @@ public class RoomMeasuringValuesCache {
         synchronized (roomId) {
             final var entry = cache.computeIfAbsent(roomId, k -> new Entry());
             entry.setHcuValues(values);
+            LOGGER.debug("Put HCU values of group {} for room {}",
+                    Optional.ofNullable(values).map(HcuRoomMeasuringValues::getGroupId).orElse(null), roomId);
         }
     }
 
@@ -81,9 +85,28 @@ public class RoomMeasuringValuesCache {
         final var adaxActualTemperature = deviceService.parseRoomId(device.getDeviceId())
                 .flatMap(this::findAdaxRoomMeasuringValues)
                 .map(AdaxRoomMeasuringValues::getTemperature)
-                .map(deviceService::convertTemperature)
+                .map(conversionService::convertAdaxToHcuTemperature)
                 .orElse(null);
         return Objects.equals(deviceActualTemperature, adaxActualTemperature);
+    }
+
+    /**
+     * Compares the given heating parameters with the heating parameters of the
+     * cached ADAX values.
+     * 
+     * @param roomId            the {@link RoomId}, must not be <code>null</code>
+     * @param heatingEnabled    the preferred heating enabled parameter
+     * @param targetTemperature the preferred target temperature
+     * @return <code>true</code> if the given heating parameters differs from the
+     *         actual heating parameters of the cached ADAX values
+     */
+    public boolean heatingHasChanged(@NonNull RoomId roomId, boolean heatingEnabled, int targetTemperature) {
+        final var values = Optional.ofNullable(cache.get(roomId)).map(Entry::getAdaxValues).orElse(null);
+        if (values != null) {
+            return !Objects.equals(values.getHeatingEnabled(), heatingEnabled)
+                    || !Objects.equals(values.getTargetTemperature(), targetTemperature);
+        }
+        return true;
     }
 
     public Optional<AdaxRoomMeasuringValues> findAdaxRoomMeasuringValues(@NonNull RoomId roomId) {
@@ -92,5 +115,14 @@ public class RoomMeasuringValuesCache {
 
     private Optional<Entry> findEntry(@NonNull RoomId roomId) {
         return Optional.ofNullable(cache.get(roomId));
+    }
+
+    public List<RoomId> listRoomsAssociatedWithHcuGroupId(@NonNull String groupId) {
+        return cache.entrySet().stream()
+                .filter(entry -> Optional.ofNullable(entry.getValue().getHcuValues())
+                        .map(HcuRoomMeasuringValues::getGroupId)
+                        .filter(groupId::equals).isPresent())
+                .map(e -> e.getKey())
+                .toList();
     }
 }

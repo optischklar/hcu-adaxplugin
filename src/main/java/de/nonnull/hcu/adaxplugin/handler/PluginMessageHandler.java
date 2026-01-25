@@ -66,7 +66,7 @@ abstract class PluginMessageHandler<T extends Body> extends AbstractVerticle imp
         vertx.eventBus().publish(StatusRequest.class.getName(), JsonObject.mapFrom(statusRequest));
     }
 
-    protected void publish(@NonNull ControlAdaxEvent event) {
-        vertx.eventBus().publish(ControlAdaxEvent.class.getName(), JsonObject.mapFrom(event));
+    protected void publish(@NonNull SyncAdaxHeatingEvent event) {
+        vertx.eventBus().publish(SyncAdaxHeatingEvent.class.getName(), JsonObject.mapFrom(event));
     }
 }

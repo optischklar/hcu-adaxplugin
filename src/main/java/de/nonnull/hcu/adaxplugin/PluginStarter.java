@@ -16,14 +16,16 @@ import de.eq3.plugin.serialization.PluginMessage;
 import de.nonnull.hcu.adaxplugin.adax.AdaxRemoteClient;
 import de.nonnull.hcu.adaxplugin.handler.ConfigTemplateRequestHandler;
 import de.nonnull.hcu.adaxplugin.handler.ConfigUpdateRequestHandler;
-import de.nonnull.hcu.adaxplugin.handler.ControlAdaxVerticle;
 import de.nonnull.hcu.adaxplugin.handler.ControlRequestHandler;
 import de.nonnull.hcu.adaxplugin.handler.DeviceInclusionExclusionHandler;
 import de.nonnull.hcu.adaxplugin.handler.DiscoverRequestHandler;
+import de.nonnull.hcu.adaxplugin.handler.HmipSystemEventHandler;
 import de.nonnull.hcu.adaxplugin.handler.HmipSystemResponseHandler;
 import de.nonnull.hcu.adaxplugin.handler.PeriodicHandler;
 import de.nonnull.hcu.adaxplugin.handler.PluginStateRequestHandler;
 import de.nonnull.hcu.adaxplugin.handler.StatusRequestHandler;
+import de.nonnull.hcu.adaxplugin.handler.SyncAdaxHeatingVerticle;
+import de.nonnull.hcu.adaxplugin.service.ConversionService;
 import de.nonnull.hcu.adaxplugin.service.DeviceService;
 import de.nonnull.hcu.adaxplugin.service.PersistenceService;
 import de.nonnull.hcu.adaxplugin.service.PluginStateService;
@@ -46,17 +48,19 @@ public class PluginStarter {
     private PluginStarter() {
         vertx = Vertx.vertx();
 
+        final var conversionService = new ConversionService();
         final var persistenceService = new PersistenceService(vertx);
         final var adaxClient = new AdaxRemoteClient(WebClient.create(vertx), persistenceService);
-        final var deviceService = new DeviceService();
+        final var deviceService = new DeviceService(conversionService);
         final var pluginStateService = new PluginStateService(persistenceService);
-        final var roomMeasuringValuesCache = new RoomMeasuringValuesCache(deviceService);
+        final var roomMeasuringValuesCache = new RoomMeasuringValuesCache(deviceService, conversionService);
         context = PluginContext.builder()
                 .persistenceService(persistenceService)
                 .adaxClient(adaxClient)
                 .deviceService(deviceService)
                 .pluginStateService(pluginStateService)
                 .roomMeasuringValuesCache(roomMeasuringValuesCache)
+                .conversionService(conversionService)
                 .build();
     }
 
@@ -93,7 +97,8 @@ public class PluginStarter {
                         vertx.deployVerticle(() -> new StatusRequestHandler(context), new DeploymentOptions()),
                         vertx.deployVerticle(() -> new DiscoverRequestHandler(context), new DeploymentOptions()),
                         vertx.deployVerticle(() -> new HmipSystemResponseHandler(context), new DeploymentOptions()),
-                        vertx.deployVerticle(() -> new ControlAdaxVerticle(context), new DeploymentOptions()))))
+                        vertx.deployVerticle(() -> new HmipSystemEventHandler(context), new DeploymentOptions()),
+                        vertx.deployVerticle(() -> new SyncAdaxHeatingVerticle(context), new DeploymentOptions()))))
         .onSuccess(future -> {
             LOGGER.info("All verticles started successfully");
             final var status = stateService.calculatePluginReadinessStatus();

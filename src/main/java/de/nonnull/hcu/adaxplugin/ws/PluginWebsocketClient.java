@@ -48,7 +48,7 @@ public class PluginWebsocketClient extends AbstractVerticle {
                 .setPort(Integer.valueOf(System.getProperty("websocket.port", "9001")))
                 .setSsl(true)
                 .putHeader(Headers.PLUGIN_ID.toString(), PLUGIN_ID)
-                // .putHeader(Headers.HMIP_SYSTEM_EVENTS.toString(), "true")
+                .putHeader(Headers.HMIP_SYSTEM_EVENTS.toString(), "true")
                 .putHeader(Headers.AUTHTOKEN.toString(), context.getAuthToken());
 
         final Future<WebSocket> wsConnection = vertx.createHttpClient(clientOptions).webSocket(connectOptions);
