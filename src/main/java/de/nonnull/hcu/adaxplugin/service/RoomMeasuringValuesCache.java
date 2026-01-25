@@ -13,7 +13,6 @@ import org.apache.logging.log4j.Logger;
 
 import de.eq3.plugin.domain.device.Device;
 import de.eq3.plugin.domain.features.ActualTemperature;
-import de.eq3.plugin.domain.features.IFeature;
 import de.eq3.plugin.serialization.Feature;
 import de.nonnull.hcu.adaxplugin.adax.model.ContentResponse;
 import de.nonnull.hcu.adaxplugin.adax.model.Home;
@@ -76,8 +75,7 @@ public class RoomMeasuringValuesCache {
      */
     public boolean actualTemperatureHasChanged(@NonNull Device device) {
         final var deviceActualTemperature = device.getFeatures().stream()
-                .map(IFeature::getType)
-                .filter(t -> t == Feature.ACTUAL_TEMPERATURE)
+                .filter(f -> f.getType() == Feature.ACTUAL_TEMPERATURE)
                 .map(ActualTemperature.class::cast)
                 .map(ActualTemperature::getActualTemperature)
                 .findAny()

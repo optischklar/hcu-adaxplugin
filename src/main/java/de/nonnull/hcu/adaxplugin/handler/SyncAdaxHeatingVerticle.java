@@ -80,7 +80,7 @@ public class SyncAdaxHeatingVerticle extends AbstractVerticle implements Handler
             if (cache.heatingHasChanged(roomId, heatingEnabled, targetTemperature)) {
                 controlRoom(roomId, heatingEnabled, targetTemperature);
             } else {
-                LOGGER.info("Ignoring room {}: heating parameters has not changed "
+                LOGGER.info("Ignoring room {}: heating parameters have not changed "
                         + "(heating enabled: {}, target temperature: {})", roomId, heatingEnabled, targetTemperature);
             }
         } finally {
