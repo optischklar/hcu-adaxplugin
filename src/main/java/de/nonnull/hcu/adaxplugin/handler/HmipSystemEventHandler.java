@@ -1,8 +1,5 @@
 package de.nonnull.hcu.adaxplugin.handler;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import de.eq3.plugin.domain.status.HmipSystemEvent;
 import de.nonnull.hcu.adaxplugin.PluginContext;
 import io.vertx.core.AbstractVerticle;
@@ -11,11 +8,11 @@ import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonObject;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RequiredArgsConstructor
 public class HmipSystemEventHandler extends AbstractVerticle implements Handler<Message<JsonObject>> {
-
-    private static final Logger LOGGER = LogManager.getLogger(HmipSystemEventHandler.class);
 
     private static final String EVENT_TYPE_GROUP_CHANGED = "GROUP_CHANGED";
 

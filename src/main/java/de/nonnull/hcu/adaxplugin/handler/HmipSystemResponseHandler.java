@@ -2,18 +2,15 @@ package de.nonnull.hcu.adaxplugin.handler;
 
 import java.util.ArrayList;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import de.eq3.plugin.domain.control.HmipSystemResponse;
 import de.eq3.plugin.serialization.DeviceType;
 import de.nonnull.hcu.adaxplugin.PluginContext;
 import io.vertx.core.json.JsonObject;
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class HmipSystemResponseHandler extends PluginMessageHandler<HmipSystemResponse> {
-
-    private static final Logger LOGGER = LogManager.getLogger(HmipSystemResponseHandler.class);
 
     private static final String DEVICE_TYPE_PLUGIN = "PLUGIN_EXTERNAL";
     private static final String GROUP_TYPE_HEATING = "HEATING";

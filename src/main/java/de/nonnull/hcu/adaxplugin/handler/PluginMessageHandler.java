@@ -4,9 +4,6 @@ import static de.nonnull.hcu.adaxplugin.PluginContext.PLUGIN_ID;
 
 import java.util.UUID;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import de.eq3.plugin.domain.Body;
 import de.eq3.plugin.domain.discover.DiscoverRequest;
 import de.eq3.plugin.domain.status.StatusRequest;
@@ -20,10 +17,11 @@ import io.vertx.core.json.JsonObject;
 import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 abstract class PluginMessageHandler<T extends Body> extends AbstractVerticle implements Handler<Message<JsonObject>> {
-    private static final Logger LOGGER = LogManager.getLogger(PluginMessageHandler.class);
 
     protected final PluginContext context;
     protected final Class<T> pluginMessageType;

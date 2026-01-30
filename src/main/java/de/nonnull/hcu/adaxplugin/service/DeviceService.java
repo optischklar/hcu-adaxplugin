@@ -11,8 +11,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import de.eq3.plugin.domain.device.Device;
 import de.eq3.plugin.domain.features.ActualTemperature;
@@ -28,11 +26,11 @@ import de.nonnull.hcu.adaxplugin.config.RoomConfig;
 import de.nonnull.hcu.adaxplugin.config.RoomId;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RequiredArgsConstructor
 public class DeviceService {
-    private static final Logger LOGGER = LogManager.getLogger(DeviceService.class);
-
     private static final String SUFFIX_THERMOSTAT = "-T";
     private static final String SUFFIX_CLIMATE_SENSOR = "-C";
 

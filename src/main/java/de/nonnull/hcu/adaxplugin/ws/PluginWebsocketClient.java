@@ -20,13 +20,13 @@
  * 2026-01-18 optischklar
  * - PluginContext added
  * - static methods removed
+ * 
+ * 2026-01-30 optischklar
+ * - Log4j replaced by Slf4j
  */
 package de.nonnull.hcu.adaxplugin.ws;
 
 import static de.nonnull.hcu.adaxplugin.PluginContext.PLUGIN_ID;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import de.eq3.plugin.Headers;
 import de.eq3.plugin.serialization.PluginMessage;
@@ -39,11 +39,11 @@ import io.vertx.core.http.WebSocket;
 import io.vertx.core.http.WebSocketConnectOptions;
 import io.vertx.core.json.JsonObject;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RequiredArgsConstructor
 public class PluginWebsocketClient extends AbstractVerticle {
-    private static final Logger LOGGER = LogManager.getLogger(PluginWebsocketClient.class);
-
     private static final long RECONNECT_DELAY = 20000L;
 
     private final PluginContext context;

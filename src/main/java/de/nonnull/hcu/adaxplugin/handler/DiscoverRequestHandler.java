@@ -8,9 +8,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import de.eq3.plugin.domain.control.HmipSystemRequest;
 import de.eq3.plugin.domain.device.Device;
 import de.eq3.plugin.domain.discover.DiscoverRequest;
@@ -23,10 +20,10 @@ import de.eq3.plugin.domain.user.message.MessageCategory;
 import de.eq3.plugin.serialization.PluginMessageType;
 import de.nonnull.hcu.adaxplugin.PluginContext;
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class DiscoverRequestHandler extends PluginMessageHandler<DiscoverRequest> {
-
-    private static final Logger LOGGER = LogManager.getLogger(DiscoverRequestHandler.class);
 
     public DiscoverRequestHandler(PluginContext aContext) {
         super(aContext, DiscoverRequest.class);

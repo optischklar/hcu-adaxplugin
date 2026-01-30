@@ -7,19 +7,16 @@ import static de.nonnull.hcu.adaxplugin.PluginContext.PLUGIN_NAME;
 import java.util.Map;
 import java.util.UUID;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import de.eq3.plugin.domain.plugin.PluginReadinessStatus;
 import de.eq3.plugin.domain.plugin.PluginStateResponse;
 import de.eq3.plugin.serialization.PluginMessage;
 import de.eq3.plugin.serialization.PluginMessageType;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RequiredArgsConstructor
 public class PluginStateService {
-    private static final Logger LOGGER = LogManager.getLogger(PluginStateService.class);
-
     private final PersistenceService persistenceService;
 
     public PluginMessage<PluginStateResponse> createPluginStateResponseMessage() {

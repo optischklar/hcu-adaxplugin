@@ -8,9 +8,6 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import de.eq3.plugin.domain.device.Device;
 import de.eq3.plugin.domain.features.ActualTemperature;
 import de.eq3.plugin.serialization.Feature;
@@ -20,11 +17,11 @@ import de.nonnull.hcu.adaxplugin.config.RoomId;
 import lombok.Data;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RequiredArgsConstructor
 public class RoomMeasuringValuesCache {
-
-    private static final Logger LOGGER = LogManager.getLogger(RoomMeasuringValuesCache.class);
 
     private final DeviceService deviceService;
     private final ConversionService conversionService;

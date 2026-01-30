@@ -3,9 +3,6 @@ package de.nonnull.hcu.adaxplugin.adax;
 import java.time.Instant;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import de.nonnull.hcu.adaxplugin.service.PersistenceService;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
@@ -15,10 +12,10 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class TokenManager {
-    private static final Logger LOGGER = LogManager.getLogger(TokenManager.class);
-
     private final WebClient webClient;
     private final PersistenceService persistenceService;
 
@@ -64,15 +61,15 @@ public class TokenManager {
         form.add("password", credentials.getClientSecret());
 
         webClient.postAbs(credentials.getApiUrl() + "/auth/token")
-                .putHeader("Content-Type", "application/x-www-form-urlencoded").sendForm(form, ar -> {
-                    if (ar.succeeded()) {
-                        LOGGER.debug("Authentication succeeded");
-                        parseTokenResponse(credentials.getApiUrl(), ar.result(), handler);
-                    } else {
-                        LOGGER.debug("Authentication failed", ar.cause());
-                        handler.handle(Future.failedFuture(ar.cause()));
-                    }
-                });
+        .putHeader("Content-Type", "application/x-www-form-urlencoded").sendForm(form, ar -> {
+            if (ar.succeeded()) {
+                LOGGER.debug("Authentication succeeded");
+                parseTokenResponse(credentials.getApiUrl(), ar.result(), handler);
+            } else {
+                LOGGER.debug("Authentication failed", ar.cause());
+                handler.handle(Future.failedFuture(ar.cause()));
+            }
+        });
     }
 
     private void refresh(String refreshToken, Handler<AsyncResult<Token>> handler) {
@@ -102,15 +99,15 @@ public class TokenManager {
         form.add("password", credentials.getClientSecret());
 
         webClient.postAbs(credentials.getApiUrl() + "/auth/token")
-                .putHeader("Content-Type", "application/x-www-form-urlencoded").sendForm(form, ar -> {
-                    if (ar.succeeded()) {
-                        LOGGER.debug("Refresh succeeded");
-                        parseTokenResponse(credentials.getApiUrl(), ar.result(), handler);
-                    } else {
-                        LOGGER.debug("Refresh failed");
-                        handler.handle(Future.failedFuture(ar.cause()));
-                    }
-                });
+        .putHeader("Content-Type", "application/x-www-form-urlencoded").sendForm(form, ar -> {
+            if (ar.succeeded()) {
+                LOGGER.debug("Refresh succeeded");
+                parseTokenResponse(credentials.getApiUrl(), ar.result(), handler);
+            } else {
+                LOGGER.debug("Refresh failed");
+                handler.handle(Future.failedFuture(ar.cause()));
+            }
+        });
     }
 
     private void parseTokenResponse(String apiUrl, HttpResponse<Buffer> response, Handler<AsyncResult<Token>> handler) {

@@ -6,9 +6,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Properties;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import de.eq3.plugin.domain.inclusion.ExclusionEvent;
 import de.eq3.plugin.domain.inclusion.InclusionEvent;
 import de.eq3.plugin.domain.plugin.PluginReadinessStatus;
@@ -36,10 +33,10 @@ import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class PluginStarter {
-    private static final Logger LOGGER = LogManager.getLogger(PluginStarter.class);
-
     private static final String PLUGIN_PROPERTIES_FILE = "plugin.properties";
 
     private final Vertx vertx;

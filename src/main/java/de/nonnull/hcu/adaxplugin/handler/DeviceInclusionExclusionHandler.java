@@ -2,18 +2,16 @@ package de.nonnull.hcu.adaxplugin.handler;
 
 import java.util.Set;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import de.eq3.plugin.domain.Body;
 import de.eq3.plugin.domain.inclusion.ExclusionEvent;
 import de.eq3.plugin.domain.inclusion.InclusionEvent;
 import de.nonnull.hcu.adaxplugin.PluginContext;
 import de.nonnull.hcu.adaxplugin.config.Configuration;
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class DeviceInclusionExclusionHandler<T extends Body> extends PluginMessageHandler<T> {
-    private static final Logger LOGGER = LogManager.getLogger(DeviceInclusionExclusionHandler.class);
 
     public DeviceInclusionExclusionHandler(PluginContext aContext, Class<T> eventType) {
         super(aContext, eventType);

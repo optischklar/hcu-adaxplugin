@@ -5,9 +5,6 @@ import static de.nonnull.hcu.adaxplugin.PluginContext.PLUGIN_ID;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import de.eq3.plugin.domain.device.Device;
 import de.eq3.plugin.domain.features.IFeature;
 import de.eq3.plugin.domain.status.StatusEvent;
@@ -21,11 +18,11 @@ import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RequiredArgsConstructor
 public class PeriodicHandler implements Handler<Long> {
-
-    private static final Logger LOGGER = LogManager.getLogger(PeriodicHandler.class);
 
     private final Vertx vertx;
     private final PluginContext context;

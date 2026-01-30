@@ -11,9 +11,6 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import de.nonnull.hcu.adaxplugin.PluginStarter;
 import de.nonnull.hcu.adaxplugin.config.Configuration;
 import de.nonnull.hcu.adaxplugin.config.Credentials;
@@ -25,10 +22,10 @@ import io.vertx.core.file.FileSystemException;
 import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonObject;
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class PersistenceService {
-    private static final Logger LOGGER = LogManager.getLogger(PersistenceService.class);
-
     private static final String PLUGIN_TEMPLATE_AUTH_FOLDER = "persistence.folder";
     private static final String DEFAULT_PATH = "/data";
     private static final String FILE_NAME = "/plugin.data";

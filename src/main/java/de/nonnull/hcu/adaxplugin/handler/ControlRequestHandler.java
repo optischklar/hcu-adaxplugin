@@ -2,9 +2,6 @@ package de.nonnull.hcu.adaxplugin.handler;
 
 import java.util.Set;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import de.eq3.plugin.domain.control.ControlRequest;
 import de.eq3.plugin.domain.control.ControlResponse;
 import de.eq3.plugin.domain.error.Error;
@@ -17,12 +14,12 @@ import de.nonnull.hcu.adaxplugin.PluginContext;
 import de.nonnull.hcu.adaxplugin.adax.model.ControlResponseRoom;
 import de.nonnull.hcu.adaxplugin.adax.model.ControlStatus;
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class ControlRequestHandler extends PluginMessageHandler<ControlRequest> {
 
     private static final String CONTROL_REQUEST_FAILED = "CONTROL_REQUEST_FAILED";
-
-    private static final Logger LOGGER = LogManager.getLogger(ControlRequestHandler.class);
 
     public ControlRequestHandler(PluginContext aContext) {
         super(aContext, ControlRequest.class);

@@ -19,8 +19,6 @@ import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import de.eq3.plugin.domain.config.ConfigUpdateRequest;
 import de.eq3.plugin.domain.config.ConfigUpdateResponse;
@@ -32,10 +30,10 @@ import de.nonnull.hcu.adaxplugin.config.Credentials;
 import de.nonnull.hcu.adaxplugin.config.RoomConfig;
 import de.nonnull.hcu.adaxplugin.config.RoomId;
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class ConfigUpdateRequestHandler extends PluginMessageHandler<ConfigUpdateRequest> {
-
-    private static final Logger LOGGER = LogManager.getLogger(ConfigUpdateRequestHandler.class);
 
     public ConfigUpdateRequestHandler(PluginContext aContext) {
         super(aContext, ConfigUpdateRequest.class);

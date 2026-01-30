@@ -2,9 +2,6 @@ package de.nonnull.hcu.adaxplugin.adax;
 
 import java.util.List;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import de.nonnull.hcu.adaxplugin.adax.model.ContentResponse;
 import de.nonnull.hcu.adaxplugin.adax.model.ControlRequest;
 import de.nonnull.hcu.adaxplugin.adax.model.ControlRequestRoom;
@@ -16,10 +13,10 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.ext.web.client.WebClient;
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class AdaxRemoteClient {
-    private static final Logger LOGGER = LogManager.getLogger(AdaxRemoteClient.class);
-
     private final WebClient webClient;
     private final TokenManager tokenManager;
 

@@ -1,8 +1,5 @@
 package de.nonnull.hcu.adaxplugin.handler;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import de.nonnull.hcu.adaxplugin.PluginContext;
 import de.nonnull.hcu.adaxplugin.adax.model.ControlResponseRoom;
 import de.nonnull.hcu.adaxplugin.adax.model.ControlStatus;
@@ -14,11 +11,11 @@ import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonObject;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RequiredArgsConstructor
 public class SyncAdaxHeatingVerticle extends AbstractVerticle implements Handler<Message<JsonObject>> {
-
-    private static final Logger LOGGER = LogManager.getLogger(SyncAdaxHeatingVerticle.class);
 
     @NonNull
     private final PluginContext context;

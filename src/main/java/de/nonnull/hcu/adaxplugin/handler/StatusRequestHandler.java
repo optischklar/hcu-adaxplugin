@@ -4,18 +4,16 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import de.eq3.plugin.domain.error.Error;
 import de.eq3.plugin.domain.status.StatusRequest;
 import de.eq3.plugin.domain.status.StatusResponse;
 import de.eq3.plugin.serialization.PluginMessageType;
 import de.nonnull.hcu.adaxplugin.PluginContext;
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class StatusRequestHandler extends PluginMessageHandler<StatusRequest> {
-    private static final Logger LOGGER = LogManager.getLogger(StatusRequestHandler.class);
 
     public StatusRequestHandler(PluginContext aContext) {
         super(aContext, StatusRequest.class);
