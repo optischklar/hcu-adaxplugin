@@ -56,7 +56,7 @@ public class DiscoverRequestHandler extends PluginMessageHandler<DiscoverRequest
                         .createDevices(config.getRoomConfigurations().values(), content)
                         .collect(Collectors.toSet());
 
-                LOGGER.info("Devices: {}", devices);
+                LOGGER.debug("Devices: {}", devices);
 
                 if (devices.isEmpty()) {
                     sendInfoMessage("Plugin Info", "No devices found!");
@@ -93,7 +93,7 @@ public class DiscoverRequestHandler extends PluginMessageHandler<DiscoverRequest
     }
 
     private void sendSuccessResponse(String requestId, Set<Device> devices) {
-        LOGGER.info("ADAX: Successfully discovered and converted {} device(s)", devices.size());
+        LOGGER.info("Successfully discovered {} device(s)", devices.size());
         final var message = createMessage(requestId, PluginMessageType.DISCOVER_RESPONSE,
                 new DiscoverResponse(true, devices, null));
         sendMessage(message);

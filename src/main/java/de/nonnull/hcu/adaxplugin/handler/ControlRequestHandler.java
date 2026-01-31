@@ -75,15 +75,17 @@ public class ControlRequestHandler extends PluginMessageHandler<ControlRequest> 
             final var targetTemperature = context.getConversionService().convertHcuSetPointTemperatureToAdaxTargetTemperature(
                     roomConfig, setPointTempFeature.get().getSetPointTemperature());
 
-            LOGGER.info("Setting target temperature of room {} to {}", roomId.toIdentifier(), targetTemperature);
+            LOGGER.debug("Setting target temperature of room {} to {}", roomId.toIdentifier(), targetTemperature);
 
             context.getAdaxClient().controlRoom(roomId, true, targetTemperature, ar -> {
                 if (ar.succeeded()) {
                     final var response = ar.result();
-                    LOGGER.info("ADAX API - Successfully called api request. Response: {}", response);
+                    LOGGER.debug("ADAX API - Successfully called api request. Response: {}", response);
                     final var status = response.getRooms().stream().filter(r -> r.getId() == roomId.getRoomId())
                             .map(ControlResponseRoom::getStatus).findAny();
                     if (status.filter(s -> s == ControlStatus.OK).isPresent()) {
+                        LOGGER.info("Successfully set temperature of room {} to {}", roomId.toIdentifier(),
+                                targetTemperature);
                         sendControlRequestResponse(messageId, deviceId, true, null);
                     } else {
                         final Error error = new Error(CONTROL_REQUEST_FAILED,

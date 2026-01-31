@@ -48,7 +48,7 @@ public class HmipSystemEventHandler extends AbstractVerticle implements Handler<
                 if (roomIds.isEmpty()) {
                     continue;
                 }
-                LOGGER.info("Got event for rooms {}", roomIds);
+                LOGGER.debug("Got event for rooms {}", roomIds);
                 for (final var roomId : roomIds) {
                     final var adaxEvent = new SyncAdaxHeatingEvent(roomId, group);
                     publish(adaxEvent);

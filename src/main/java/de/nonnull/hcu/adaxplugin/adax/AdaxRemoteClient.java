@@ -38,7 +38,7 @@ public class AdaxRemoteClient {
             .send(resp -> {
                 if (resp.succeeded()) {
                     final var content = resp.result().bodyAsJson(ContentResponse.class);
-                    LOGGER.info("Got response: {}", content);
+                    LOGGER.debug("Got response: {}", content);
                     if (content != null) {
                         handler.handle(Future.succeededFuture(content));
                     } else {
@@ -74,7 +74,7 @@ public class AdaxRemoteClient {
             .putHeader("Authorization", "Bearer " + accessToken).sendJson(request, resp -> {
                 if (resp.succeeded()) {
                     final var control = resp.result().bodyAsJson(ControlResponse.class);
-                    LOGGER.info("Got response: {}", control);
+                    LOGGER.debug("Got response: {}", control);
                     if (control != null) {
                         handler.handle(Future.succeededFuture(control));
                     } else {

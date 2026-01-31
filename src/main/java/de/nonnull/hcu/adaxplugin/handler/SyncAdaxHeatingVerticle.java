@@ -33,7 +33,7 @@ public class SyncAdaxHeatingVerticle extends AbstractVerticle implements Handler
         }
 
         final var event = message.body().mapTo(SyncAdaxHeatingEvent.class);
-        LOGGER.info("Got event for room {}", event.getRoomId());
+        LOGGER.debug("Got event for room {}", event.getRoomId());
 
         final var optConfig = context.getPersistenceService().getConfiguration();
 
@@ -53,7 +53,7 @@ public class SyncAdaxHeatingVerticle extends AbstractVerticle implements Handler
         final var roomConfig = config.getRoomConfigurations().get(roomId);
 
         if (roomConfig == null || roomConfig.isExcludeThermostat()) {
-            LOGGER.error("Ignoring room {}: room is excluded", roomId);
+            LOGGER.debug("Ignoring room {}: room is excluded", roomId);
             return;
         }
 
@@ -77,7 +77,7 @@ public class SyncAdaxHeatingVerticle extends AbstractVerticle implements Handler
             if (cache.heatingHasChanged(roomId, heatingEnabled, targetTemperature)) {
                 controlRoom(roomId, heatingEnabled, targetTemperature);
             } else {
-                LOGGER.info("Ignoring room {}: heating parameters have not changed "
+                LOGGER.debug("Ignoring room {}: heating parameters have not changed "
                         + "(heating enabled: {}, target temperature: {})", roomId, heatingEnabled, targetTemperature);
             }
         } finally {

@@ -116,7 +116,7 @@ public class PluginStarter {
 
     private void sendMessage(PluginMessage<?> message) {
         final var encodedMessage = JsonObject.mapFrom(message).encode();
-        LOGGER.info("Sending {}", encodedMessage);
+        LOGGER.debug("Sending {}", encodedMessage);
         vertx.eventBus().send(context.getWebSocketHandlerId(), encodedMessage);
     }
 }

@@ -10,6 +10,8 @@ import lombok.Value;
 @Value
 @Builder
 public class Token {
+    private static final long EXPIRY_GAP_SECONDS = 30;
+
     @NonNull
     private final String apiUrl;
     @NonNull
@@ -18,9 +20,15 @@ public class Token {
     private final Instant createdAt;
 
     public boolean isExpired() {
+        return Instant.now().isAfter(getExpiry());
+    }
+
+    public Instant getExpiry() {
         final Long expiresIn = tokenData.getLong("expires_in");
-        return expiresIn == null
-                || (System.currentTimeMillis() > (createdAt.toEpochMilli() + expiresIn * 1000 - 30_000));
+        if (expiresIn != null) {
+            return createdAt.plusSeconds(expiresIn - EXPIRY_GAP_SECONDS);
+        }
+        return createdAt;
     }
 
     public String getAccessToken() {

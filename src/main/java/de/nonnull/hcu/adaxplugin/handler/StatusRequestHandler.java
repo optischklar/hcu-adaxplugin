@@ -50,7 +50,7 @@ public class StatusRequestHandler extends PluginMessageHandler<StatusRequest> {
                                 || requestedDeviceIds.contains(device.getDeviceId()))
                         .collect(Collectors.toSet());
 
-                LOGGER.info("Sending status response for {} device(s): {}", devices.size(), devices);
+                LOGGER.debug("Sending status response for {} device(s): {}", devices.size(), devices);
                 final var response = new StatusResponse(true, devices, null);
                 final var message = createMessage(messageId, PluginMessageType.STATUS_RESPONSE, response);
                 sendMessage(message);

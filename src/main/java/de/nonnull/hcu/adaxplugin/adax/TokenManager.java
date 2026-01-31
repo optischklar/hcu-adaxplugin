@@ -63,10 +63,10 @@ public class TokenManager {
         webClient.postAbs(credentials.getApiUrl() + "/auth/token")
         .putHeader("Content-Type", "application/x-www-form-urlencoded").sendForm(form, ar -> {
             if (ar.succeeded()) {
-                LOGGER.debug("Authentication succeeded");
+                LOGGER.info("Authentication succeeded");
                 parseTokenResponse(credentials.getApiUrl(), ar.result(), handler);
             } else {
-                LOGGER.debug("Authentication failed", ar.cause());
+                LOGGER.error("Authentication failed", ar.cause());
                 handler.handle(Future.failedFuture(ar.cause()));
             }
         });
@@ -101,10 +101,10 @@ public class TokenManager {
         webClient.postAbs(credentials.getApiUrl() + "/auth/token")
         .putHeader("Content-Type", "application/x-www-form-urlencoded").sendForm(form, ar -> {
             if (ar.succeeded()) {
-                LOGGER.debug("Refresh succeeded");
+                LOGGER.info("Refresh succeeded");
                 parseTokenResponse(credentials.getApiUrl(), ar.result(), handler);
             } else {
-                LOGGER.debug("Refresh failed");
+                LOGGER.error("Refresh failed");
                 handler.handle(Future.failedFuture(ar.cause()));
             }
         });
@@ -115,7 +115,7 @@ public class TokenManager {
             final JsonObject json = response.bodyAsJsonObject();
             if (json.containsKey("access_token")) {
                 final var token = Token.builder().apiUrl(apiUrl).tokenData(json).createdAt(Instant.now()).build();
-                LOGGER.debug("New token: {}", token);
+                LOGGER.info("New token will expire at {}", token.getExpiry());
                 tokenRef.set(token);
                 handler.handle(Future.succeededFuture(token));
             } else {
