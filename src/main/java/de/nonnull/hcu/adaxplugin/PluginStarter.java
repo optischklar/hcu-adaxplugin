@@ -76,7 +76,7 @@ public class PluginStarter {
     }
 
     private void run() {
-        LOGGER.info("Starting {} plugin…", PLUGIN_NAME);
+        LOGGER.info("Starting {} plugin...", PLUGIN_NAME);
 
         final var wsClient = vertx.deployVerticle(() -> new PluginWebsocketClient(context), new DeploymentOptions());
 

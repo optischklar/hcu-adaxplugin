@@ -1,7 +1,7 @@
 FROM --platform=linux/arm64/v8 ghcr.io/homematicip/alpine-jre:0.0.1
 COPY maven/ /app/
 WORKDIR /app
-ENTRYPOINT java -Xmx32M -jar /app/${project.artifactId}-${project.version}.jar
+ENTRYPOINT java -Xmx32M -cp "/app/*" de.nonnull.hcu.adaxplugin.PluginStarter
 LABEL de.eq3.hmip.plugin.metadata="{\"pluginId\":\"de.nonnull.hcu.adaxplugin\", \
   \"version\":\"${project.version}\", \
   \"hcuMinVersion\":\"1.4.7\", \

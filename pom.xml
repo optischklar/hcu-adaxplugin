@@ -11,7 +11,6 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<maven-assembly-plugin.version>3.5.0</maven-assembly-plugin.version>
 		<vertx.version>4.4.4</vertx.version>
 		<jackson.version>2.15.2</jackson.version>
 		<log4j.version>2.25.3</log4j.version>
@@ -22,45 +21,10 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.8.1</version>
+				<version>3.14.1</version>
 				<configuration>
 					<release>11</release>
 				</configuration>
-			</plugin>
-			<plugin>
-				<artifactId>maven-assembly-plugin</artifactId>
-				<version>${maven-assembly-plugin.version}</version>
-				<executions>
-					<execution>
-						<id>make-assembly</id>
-						<phase>install</phase>
-						<goals>
-							<goal>single</goal>
-						</goals>
-						<configuration>
-							<finalName>${project.artifactId}-${project.version}</finalName>
-							<appendAssemblyId>false</appendAssemblyId>
-							<descriptorRefs>
-								<descriptorRef>jar-with-dependencies</descriptorRef>
-							</descriptorRefs>
-							<archive>
-								<manifest>
-									<mainClass>de.nonnull.hcu.adaxplugin.PluginStarter</mainClass>
-								</manifest>
-								<manifestEntries>
-									<Build-Timestamp>${maven.build.timestamp}</Build-Timestamp>
-									<Build-Version>${project.version}</Build-Version>
-									<Build-By>${user.name}</Build-By>
-									<Build-OS-Name>${os.name}</Build-OS-Name>
-									<Build-OS-Version>${os.version}</Build-OS-Version>
-									<Build-OS-Arch>${os.arch}</Build-OS-Arch>
-									<Build-JDK-Version>${java.version}</Build-JDK-Version>
-									<Build-JDK-Vendor>${java.vendor}</Build-JDK-Vendor>
-								</manifestEntries>
-							</archive>
-						</configuration>
-					</execution>
-				</executions>
 			</plugin>
 			<plugin>
 				<groupId>io.fabric8</groupId>
@@ -78,7 +42,7 @@
 								<contextDir>${project.basedir}/docker</contextDir>
 								<assembly>
 									<targetDir>/app</targetDir>
-									<descriptorRef>artifact</descriptorRef>
+									<descriptorRef>artifact-with-dependencies</descriptorRef>
 								</assembly>
 							</build>
 						</image>
