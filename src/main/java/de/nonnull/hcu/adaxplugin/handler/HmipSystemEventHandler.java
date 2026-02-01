@@ -1,5 +1,7 @@
 package de.nonnull.hcu.adaxplugin.handler;
 
+import java.util.stream.Collectors;
+
 import de.eq3.plugin.domain.status.HmipSystemEvent;
 import de.nonnull.hcu.adaxplugin.PluginContext;
 import io.vertx.core.AbstractVerticle;
@@ -36,7 +38,7 @@ public class HmipSystemEventHandler extends AbstractVerticle implements Handler<
         final var eventTransaction = body.getJsonObject("body").getJsonObject("eventTransaction");
         final var events = eventTransaction.getJsonObject("events");
 
-        final var eventIndexes = events.fieldNames().stream().sorted().toList();
+        final var eventIndexes = events.fieldNames().stream().sorted().collect(Collectors.toList());
         LOGGER.trace("Got {} events", eventIndexes.size());
         for (final var index : eventIndexes) {
             final var event = events.getJsonObject(index);

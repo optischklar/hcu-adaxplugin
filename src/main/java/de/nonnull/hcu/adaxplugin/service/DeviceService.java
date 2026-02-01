@@ -92,7 +92,7 @@ public class DeviceService {
         final var device = new Device();
         device.setDeviceId(createDeviceId(config.getId(), deviceIdSuffix));
         device.setDeviceType(type);
-        device.setFriendlyName("ADAX %s %s".formatted(displayName, config.getDisplayName()));
+        device.setFriendlyName(String.format("ADAX %s %s", displayName, config.getDisplayName()));
         device.setFirmwareVersion(FIRMWARE_VERSION);
         device.setModelType(StringUtils.trimToEmpty(config.getModelType()));
         return device;

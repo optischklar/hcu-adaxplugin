@@ -19,7 +19,7 @@ public class RoomId {
 
     @JsonValue
     public String toIdentifier() {
-        return "%d-%d".formatted(homeId, roomId);
+        return String.format("%d-%d", homeId, roomId);
     }
 
     @JsonCreator(mode = JsonCreator.Mode.DELEGATING)

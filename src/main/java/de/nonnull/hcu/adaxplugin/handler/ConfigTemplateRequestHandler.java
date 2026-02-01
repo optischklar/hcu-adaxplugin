@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import de.eq3.plugin.domain.config.ConfigTemplateRequest;
@@ -110,7 +111,7 @@ public class ConfigTemplateRequestHandler extends PluginMessageHandler<ConfigTem
             final var groupId = "room-" + roomId.toIdentifier();
             createRoomPropertyTemplates(roomConfig, groupId).forEach(properties::put);
             final var group = new GroupTemplate(
-                    "Room %s, %s".formatted(roomId.toIdentifier(), roomConfig.getDisplayName()));
+                    String.format("Room %s, %s", roomId.toIdentifier(), roomConfig.getDisplayName()));
             group.setOrder((int) roomId.getRoomId());
             groups.put(groupId, group);
             roomIds.add(roomId.toIdentifier());
@@ -141,7 +142,8 @@ public class ConfigTemplateRequestHandler extends PluginMessageHandler<ConfigTem
 
         final var actualTemperatureHandling = new PropertyTemplate("Actual temperature handling",
                 "The handling of the actual temperature value of a room.", true, PropertyType.ENUM);
-        actualTemperatureHandling.setValues(Arrays.stream(ActualTemperatureHandling.values()).map(Enum::name).toList());
+        actualTemperatureHandling.setValues(
+                Arrays.stream(ActualTemperatureHandling.values()).map(Enum::name).collect(Collectors.toList()));
         actualTemperatureHandling.setDefaultValue(ActualTemperatureHandling.NONE.name());
         actualTemperatureHandling.setCurrentValue(config.getActualTemperatureHandling().name());
         actualTemperatureHandling.setGroupId(groupId);

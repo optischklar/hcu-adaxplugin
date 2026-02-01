@@ -118,6 +118,6 @@ public class RoomMeasuringValuesCache {
                         .map(HcuRoomMeasuringValues::getGroupId)
                         .filter(groupId::equals).isPresent())
                 .map(e -> e.getKey())
-                .toList();
+                .collect(Collectors.toList());
     }
 }

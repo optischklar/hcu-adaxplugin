@@ -42,7 +42,7 @@ public class PeriodicHandler implements Handler<Long> {
         }
 
         final var actualTemperatureRooms = config.getRoomConfigurations().values().stream()
-                .filter(this::handlesActualTemperature).toList();
+                .filter(this::handlesActualTemperature).collect(Collectors.toList());
         if (actualTemperatureRooms.isEmpty()) {
             LOGGER.debug("Skip querying actual temperatures: no rooms that handle the actual temperature");
             return;

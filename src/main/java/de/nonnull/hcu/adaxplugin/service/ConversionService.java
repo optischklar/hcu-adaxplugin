@@ -9,7 +9,11 @@ public class ConversionService {
             return null;
         }
         final var hcuValue = adaxValue / 100d;
-        return Math.clamp(hcuValue, -50d, 60d);
+        return clamp(hcuValue, -50d, 60d);
+    }
+
+    private static double clamp(double value, double min, double max) {
+        return Math.max(min, Math.min(max, value));
     }
 
     public Integer convertHcuSetPointTemperatureToAdaxTargetTemperature(@NonNull RoomConfig roomConfig,

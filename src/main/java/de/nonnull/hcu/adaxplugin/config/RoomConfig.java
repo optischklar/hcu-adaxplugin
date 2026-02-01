@@ -36,7 +36,7 @@ public class RoomConfig {
         return rooms.stream().map(room -> {
             final var home = idHomeMap.getOrDefault(room.getHomeId(), Home.DEFAULT_HOME);
             final var config = new RoomConfig();
-            config.setDisplayName("%s / %s".formatted(home.getName(), room.getName()));
+            config.setDisplayName(String.format("%s / %s", home.getName(), room.getName()));
             config.setId(new RoomId(home.getId(), room.getId()));
             return config;
         });

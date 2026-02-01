@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -110,7 +111,7 @@ public class ConfigUpdateRequestHandler extends PluginMessageHandler<ConfigUpdat
                 return Optional.ofNullable(roomId).map(RoomId::fromIdentifier).orElse(null);
             }
             return null;
-        }).filter(Objects::nonNull).toList();
+        }).filter(Objects::nonNull).collect(Collectors.toList());
     }
 
     private RoomConfig parseRoomConfig(Map<String, Object> properties, RoomId roomId) {
