@@ -32,7 +32,9 @@ public class TokenManager {
             if (token == null) {
                 authenticate(handler);
             } else {
-                refresh(token.getRefreshToken(), handler);
+                final var refreshToken = token.getRefreshToken();
+                clearToken();
+                refresh(refreshToken, handler);
             }
         } else {
             handler.handle(Future.succeededFuture(token));
@@ -61,15 +63,16 @@ public class TokenManager {
         form.add("password", credentials.getClientSecret());
 
         webClient.postAbs(credentials.getApiUrl() + "/auth/token")
-        .putHeader("Content-Type", "application/x-www-form-urlencoded").sendForm(form, ar -> {
-            if (ar.succeeded()) {
-                LOGGER.info("Authentication succeeded");
-                parseTokenResponse(credentials.getApiUrl(), ar.result(), handler);
-            } else {
-                LOGGER.error("Authentication failed", ar.cause());
-                handler.handle(Future.failedFuture(ar.cause()));
-            }
-        });
+                .putHeader("Content-Type", "application/x-www-form-urlencoded")
+                .sendForm(form, ar -> {
+                    if (isOk(ar)) {
+                        LOGGER.info("Authentication succeeded");
+                        parseTokenResponse(credentials.getApiUrl(), ar.result(), handler);
+                    } else {
+                        LOGGER.error("Authentication failed");
+                        handler.handle(createFailedFuture(ar));
+                    }
+                });
     }
 
     private void refresh(String refreshToken, Handler<AsyncResult<Token>> handler) {
@@ -99,15 +102,16 @@ public class TokenManager {
         form.add("password", credentials.getClientSecret());
 
         webClient.postAbs(credentials.getApiUrl() + "/auth/token")
-        .putHeader("Content-Type", "application/x-www-form-urlencoded").sendForm(form, ar -> {
-            if (ar.succeeded()) {
-                LOGGER.info("Refresh succeeded");
-                parseTokenResponse(credentials.getApiUrl(), ar.result(), handler);
-            } else {
-                LOGGER.error("Refresh failed");
-                handler.handle(Future.failedFuture(ar.cause()));
-            }
-        });
+                .putHeader("Content-Type", "application/x-www-form-urlencoded")
+                .sendForm(form, ar -> {
+                    if (isOk(ar)) {
+                        LOGGER.info("Refresh succeeded");
+                        parseTokenResponse(credentials.getApiUrl(), ar.result(), handler);
+                    } else {
+                        LOGGER.error("Refresh failed");
+                        handler.handle(createFailedFuture(ar));
+                    }
+                });
     }
 
     private void parseTokenResponse(String apiUrl, HttpResponse<Buffer> response, Handler<AsyncResult<Token>> handler) {
@@ -125,5 +129,27 @@ public class TokenManager {
         } catch (final Exception e) {
             handler.handle(Future.failedFuture(e));
         }
+    }
+
+    private boolean isOk(AsyncResult<HttpResponse<Buffer>> result) {
+        if (result.failed()) {
+            return false;
+        }
+        final var response = result.result();
+        return response.statusCode() >= 200 && response.statusCode() < 300;
+    }
+    
+    private <T> Future<T> createFailedFuture(AsyncResult<HttpResponse<Buffer>> result) {
+        if (result.succeeded()) {
+            final var httpResponse = result.result();
+            return Future.failedFuture(httpResponse.statusCode() + ": " + httpResponse.bodyAsString());
+        } else {
+            return Future.failedFuture(result.cause());
+        }
+    }
+
+    public void clearToken() {
+        LOGGER.info("Clearing token");
+        tokenRef.set(null);
     }
 }
