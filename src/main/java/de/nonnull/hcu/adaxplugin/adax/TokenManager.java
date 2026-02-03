@@ -98,8 +98,7 @@ public class TokenManager {
 
         final var form = MultiMap.caseInsensitiveMultiMap();
         form.add("grant_type", "refresh_token");
-        form.add("username", credentials.getClientId());
-        form.add("password", credentials.getClientSecret());
+        form.add("refresh_token", refreshToken);
 
         webClient.postAbs(credentials.getApiUrl() + "/auth/token")
                 .putHeader("Content-Type", "application/x-www-form-urlencoded")
