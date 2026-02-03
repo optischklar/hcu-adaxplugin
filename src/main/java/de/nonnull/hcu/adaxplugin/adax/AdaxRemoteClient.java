@@ -1,5 +1,9 @@
 package de.nonnull.hcu.adaxplugin.adax;
 
+import static de.nonnull.hcu.adaxplugin.adax.HttpResponseUtil.createFailedFuture;
+import static de.nonnull.hcu.adaxplugin.adax.HttpResponseUtil.isOk;
+import static de.nonnull.hcu.adaxplugin.adax.HttpResponseUtil.isUnauthorized;
+
 import java.util.List;
 
 import de.nonnull.hcu.adaxplugin.adax.model.ContentResponse;
@@ -11,8 +15,6 @@ import de.nonnull.hcu.adaxplugin.service.PersistenceService;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -94,26 +96,5 @@ public class AdaxRemoteClient {
                         }
                     });
         });
-    }
-
-    private boolean isOk(AsyncResult<HttpResponse<Buffer>> result) {
-        if (result.failed()) {
-            return false;
-        }
-        final var response = result.result();
-        return response.statusCode() >= 200 && response.statusCode() < 300;
-    }
-
-    private boolean isUnauthorized(AsyncResult<HttpResponse<Buffer>> result) {
-        return result.succeeded() && result.result().statusCode() == 401;
-    }
-
-    private <T> Future<T> createFailedFuture(AsyncResult<HttpResponse<Buffer>> result) {
-        if (result.succeeded()) {
-            final var httpResponse = result.result();
-            return Future.failedFuture(httpResponse.statusCode() + ": " + httpResponse.bodyAsString());
-        } else {
-            return Future.failedFuture(result.cause());
-        }
     }
 }

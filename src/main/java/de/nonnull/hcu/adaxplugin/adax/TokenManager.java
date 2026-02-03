@@ -1,5 +1,8 @@
 package de.nonnull.hcu.adaxplugin.adax;
 
+import static de.nonnull.hcu.adaxplugin.adax.HttpResponseUtil.createFailedFuture;
+import static de.nonnull.hcu.adaxplugin.adax.HttpResponseUtil.isOk;
+
 import java.time.Instant;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -107,8 +110,8 @@ public class TokenManager {
                         LOGGER.info("Refresh succeeded");
                         parseTokenResponse(credentials.getApiUrl(), ar.result(), handler);
                     } else {
-                        LOGGER.error("Refresh failed");
-                        handler.handle(createFailedFuture(ar));
+                        LOGGER.error("Refresh failed. Trying to authenticate.");
+                        authenticate(handler);
                     }
                 });
     }
@@ -127,23 +130,6 @@ public class TokenManager {
             }
         } catch (final Exception e) {
             handler.handle(Future.failedFuture(e));
-        }
-    }
-
-    private boolean isOk(AsyncResult<HttpResponse<Buffer>> result) {
-        if (result.failed()) {
-            return false;
-        }
-        final var response = result.result();
-        return response.statusCode() >= 200 && response.statusCode() < 300;
-    }
-    
-    private <T> Future<T> createFailedFuture(AsyncResult<HttpResponse<Buffer>> result) {
-        if (result.succeeded()) {
-            final var httpResponse = result.result();
-            return Future.failedFuture(httpResponse.statusCode() + ": " + httpResponse.bodyAsString());
-        } else {
-            return Future.failedFuture(result.cause());
         }
     }
 
