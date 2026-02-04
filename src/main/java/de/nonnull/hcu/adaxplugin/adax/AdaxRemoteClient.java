@@ -1,5 +1,9 @@
 package de.nonnull.hcu.adaxplugin.adax;
 
+import static de.nonnull.hcu.adaxplugin.adax.HttpResponseUtil.createFailedFuture;
+import static de.nonnull.hcu.adaxplugin.adax.HttpResponseUtil.isOk;
+import static de.nonnull.hcu.adaxplugin.adax.HttpResponseUtil.isUnauthorized;
+
 import java.util.List;
 
 import de.nonnull.hcu.adaxplugin.adax.model.ContentResponse;
@@ -34,21 +38,24 @@ public class AdaxRemoteClient {
 
             final var token = ar.result();
             final var accessToken = token.getAccessToken();
-            webClient.getAbs(token.getApiUrl() + "/rest/v1/content").putHeader("Authorization", "Bearer " + accessToken)
-            .send(resp -> {
-                if (resp.succeeded()) {
-                    final var content = resp.result().bodyAsJson(ContentResponse.class);
-                    LOGGER.debug("Got response: {}", content);
-                    if (content != null) {
-                        handler.handle(Future.succeededFuture(content));
-                    } else {
-                        handler.handle(Future.failedFuture("Adax response does not contain a json object"));
-                    }
-                } else {
-                    final var cause = resp.cause();
-                    handler.handle(Future.failedFuture(cause));
-                }
-            });
+            webClient.getAbs(token.getApiUrl() + "/rest/v1/content")
+                    .putHeader("Authorization", "Bearer " + accessToken)
+                    .send(resp -> {
+                        if (isOk(resp)) {
+                            final var content = resp.result().bodyAsJson(ContentResponse.class);
+                            LOGGER.debug("Got response: {}", content);
+                            if (content != null) {
+                                handler.handle(Future.succeededFuture(content));
+                            } else {
+                                handler.handle(Future.failedFuture("Adax response does not contain a json object"));
+                            }
+                        } else {
+                            if (isUnauthorized(resp)) {
+                                tokenManager.clearToken();
+                            }
+                            handler.handle(createFailedFuture(resp));
+                        }
+                    });
         });
     }
 
@@ -71,20 +78,23 @@ public class AdaxRemoteClient {
             final var token = ar.result();
             final var accessToken = token.getAccessToken();
             webClient.postAbs(token.getApiUrl() + "/rest/v1/control")
-            .putHeader("Authorization", "Bearer " + accessToken).sendJson(request, resp -> {
-                if (resp.succeeded()) {
-                    final var control = resp.result().bodyAsJson(ControlResponse.class);
-                    LOGGER.debug("Got response: {}", control);
-                    if (control != null) {
-                        handler.handle(Future.succeededFuture(control));
-                    } else {
-                        handler.handle(Future.failedFuture("Adax response does not contain a json object"));
-                    }
-                } else {
-                    final var cause = resp.cause();
-                    handler.handle(Future.failedFuture(cause));
-                }
-            });
+                    .putHeader("Authorization", "Bearer " + accessToken)
+                    .sendJson(request, resp -> {
+                        if (isOk(resp)) {
+                            final var control = resp.result().bodyAsJson(ControlResponse.class);
+                            LOGGER.debug("Got response: {}", control);
+                            if (control != null) {
+                                handler.handle(Future.succeededFuture(control));
+                            } else {
+                                handler.handle(Future.failedFuture("Adax response does not contain a json object"));
+                            }
+                        } else {
+                            if (isUnauthorized(resp)) {
+                                tokenManager.clearToken();
+                            }
+                            handler.handle(createFailedFuture(resp));
+                        }
+                    });
         });
     }
 }

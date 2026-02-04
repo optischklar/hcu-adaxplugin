@@ -1,5 +1,8 @@
 package de.nonnull.hcu.adaxplugin.adax;
 
+import static de.nonnull.hcu.adaxplugin.adax.HttpResponseUtil.createFailedFuture;
+import static de.nonnull.hcu.adaxplugin.adax.HttpResponseUtil.isOk;
+
 import java.time.Instant;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -32,7 +35,9 @@ public class TokenManager {
             if (token == null) {
                 authenticate(handler);
             } else {
-                refresh(token.getRefreshToken(), handler);
+                final var refreshToken = token.getRefreshToken();
+                clearToken();
+                refresh(refreshToken, handler);
             }
         } else {
             handler.handle(Future.succeededFuture(token));
@@ -61,15 +66,16 @@ public class TokenManager {
         form.add("password", credentials.getClientSecret());
 
         webClient.postAbs(credentials.getApiUrl() + "/auth/token")
-        .putHeader("Content-Type", "application/x-www-form-urlencoded").sendForm(form, ar -> {
-            if (ar.succeeded()) {
-                LOGGER.info("Authentication succeeded");
-                parseTokenResponse(credentials.getApiUrl(), ar.result(), handler);
-            } else {
-                LOGGER.error("Authentication failed", ar.cause());
-                handler.handle(Future.failedFuture(ar.cause()));
-            }
-        });
+                .putHeader("Content-Type", "application/x-www-form-urlencoded")
+                .sendForm(form, ar -> {
+                    if (isOk(ar)) {
+                        LOGGER.info("Authentication succeeded");
+                        parseTokenResponse(credentials.getApiUrl(), ar.result(), handler);
+                    } else {
+                        LOGGER.error("Authentication failed");
+                        handler.handle(createFailedFuture(ar));
+                    }
+                });
     }
 
     private void refresh(String refreshToken, Handler<AsyncResult<Token>> handler) {
@@ -95,19 +101,19 @@ public class TokenManager {
 
         final var form = MultiMap.caseInsensitiveMultiMap();
         form.add("grant_type", "refresh_token");
-        form.add("username", credentials.getClientId());
-        form.add("password", credentials.getClientSecret());
+        form.add("refresh_token", refreshToken);
 
         webClient.postAbs(credentials.getApiUrl() + "/auth/token")
-        .putHeader("Content-Type", "application/x-www-form-urlencoded").sendForm(form, ar -> {
-            if (ar.succeeded()) {
-                LOGGER.info("Refresh succeeded");
-                parseTokenResponse(credentials.getApiUrl(), ar.result(), handler);
-            } else {
-                LOGGER.error("Refresh failed");
-                handler.handle(Future.failedFuture(ar.cause()));
-            }
-        });
+                .putHeader("Content-Type", "application/x-www-form-urlencoded")
+                .sendForm(form, ar -> {
+                    if (isOk(ar)) {
+                        LOGGER.info("Refresh succeeded");
+                        parseTokenResponse(credentials.getApiUrl(), ar.result(), handler);
+                    } else {
+                        LOGGER.error("Refresh failed. Trying to authenticate.");
+                        authenticate(handler);
+                    }
+                });
     }
 
     private void parseTokenResponse(String apiUrl, HttpResponse<Buffer> response, Handler<AsyncResult<Token>> handler) {
@@ -125,5 +131,10 @@ public class TokenManager {
         } catch (final Exception e) {
             handler.handle(Future.failedFuture(e));
         }
+    }
+
+    public void clearToken() {
+        LOGGER.info("Clearing token");
+        tokenRef.set(null);
     }
 }
