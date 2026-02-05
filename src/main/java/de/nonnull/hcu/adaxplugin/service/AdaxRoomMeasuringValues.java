@@ -9,7 +9,7 @@ import lombok.NonNull;
 import lombok.Value;
 
 @Value
-@Builder
+@Builder(toBuilder = true)
 public class AdaxRoomMeasuringValues {
     @NonNull @Default
     private final Instant timestamp = Instant.now();

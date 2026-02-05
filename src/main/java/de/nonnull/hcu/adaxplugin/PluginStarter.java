@@ -47,10 +47,11 @@ public class PluginStarter {
 
         final var conversionService = new ConversionService();
         final var persistenceService = new PersistenceService(vertx);
-        final var adaxClient = new AdaxRemoteClient(WebClient.create(vertx), persistenceService);
         final var deviceService = new DeviceService(conversionService);
-        final var pluginStateService = new PluginStateService(persistenceService);
         final var roomMeasuringValuesCache = new RoomMeasuringValuesCache(deviceService, conversionService);
+        final var adaxClient = new AdaxRemoteClient(WebClient.create(vertx), persistenceService,
+                roomMeasuringValuesCache);
+        final var pluginStateService = new PluginStateService(persistenceService);
         context = PluginContext.builder()
                 .persistenceService(persistenceService)
                 .adaxClient(adaxClient)

@@ -12,6 +12,7 @@ import de.nonnull.hcu.adaxplugin.adax.model.ControlRequestRoom;
 import de.nonnull.hcu.adaxplugin.adax.model.ControlResponse;
 import de.nonnull.hcu.adaxplugin.config.RoomId;
 import de.nonnull.hcu.adaxplugin.service.PersistenceService;
+import de.nonnull.hcu.adaxplugin.service.RoomMeasuringValuesCache;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -23,10 +24,13 @@ import lombok.extern.slf4j.Slf4j;
 public class AdaxRemoteClient {
     private final WebClient webClient;
     private final TokenManager tokenManager;
+    private final RoomMeasuringValuesCache valuesCache;
 
-    public AdaxRemoteClient(WebClient aWebClient, PersistenceService aPersistenceService) {
+    public AdaxRemoteClient(WebClient aWebClient, PersistenceService aPersistenceService,
+            RoomMeasuringValuesCache aValuesCache) {
         webClient = aWebClient;
         tokenManager = new TokenManager(webClient, aPersistenceService);
+        valuesCache = aValuesCache;
     }
 
     public void getContent(Handler<AsyncResult<ContentResponse>> handler) {
@@ -65,10 +69,15 @@ public class AdaxRemoteClient {
                 .heatingEnabled(heatingEnabled)
                 .targetTemperature(targetTemperature).build();
         final var request = new ControlRequest(List.of(controlRequestRoom));
-        control(request, handler);
+        control(request, ar -> {
+            if (ar.succeeded()) {
+                valuesCache.putAdaxHeatingValues(roomId, heatingEnabled, targetTemperature);
+            }
+            handler.handle(ar);
+        });
     }
 
-    public void control(ControlRequest request, Handler<AsyncResult<ControlResponse>> handler) {
+    private void control(ControlRequest request, Handler<AsyncResult<ControlResponse>> handler) {
         tokenManager.getValidToken(ar -> {
             if (ar.failed()) {
                 handler.handle(Future.failedFuture(ar.cause()));
