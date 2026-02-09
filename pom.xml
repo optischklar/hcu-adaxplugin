@@ -33,13 +33,16 @@
 				<configuration>
 					<images>
 						<image>
-							<alias>de/nonnull/${project.artifactId}</alias>
 							<name>de/nonnull/${project.artifactId}</name>
 							<build>
 								<createImageOptions>
 									<platform>linux/arm64</platform>
 								</createImageOptions>
-								<contextDir>${project.basedir}/docker</contextDir>
+								<tags>
+    								<tag>latest</tag>
+    								<tag>${project.version}</tag>
+  								</tags>
+								<contextDir>${project.basedir}</contextDir>
 								<assembly>
 									<targetDir>/app</targetDir>
 									<descriptorRef>artifact-with-dependencies</descriptorRef>

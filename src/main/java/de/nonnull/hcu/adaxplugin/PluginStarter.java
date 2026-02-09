@@ -103,7 +103,7 @@ public class PluginStarter {
             LOGGER.info("Plugin status: {}", status);
             sendPluginReadinessStatus(status);
 
-            vertx.setPeriodic(60_000, new PeriodicHandler(vertx, context));
+            vertx.setPeriodic(120_000, new PeriodicHandler(vertx, context));
         }).onFailure(throwable -> {
             LOGGER.error("SYSTEM: Error starting verticles", throwable);
             sendPluginReadinessStatus(PluginReadinessStatus.ERROR);
