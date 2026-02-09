@@ -45,6 +45,16 @@ public class RoomMeasuringValuesCache {
         LOGGER.debug("Updated cached ADAX values of {} rooms.", content.getRooms().size());
     }
 
+    public void putAdaxHeatingValues(@NonNull RoomId roomId, boolean heatingEnabled, int targetTemperature) {
+        final var values = Optional.ofNullable(cache.get(roomId)).map(Entry::getAdaxValues)
+                .map(AdaxRoomMeasuringValues::toBuilder)
+                .orElse(AdaxRoomMeasuringValues.builder())
+                .heatingEnabled(heatingEnabled)
+                .targetTemperature(targetTemperature)
+                .build();
+        putAdaxValues(roomId, values);
+    }
+
     public void putAdaxValues(@NonNull RoomId roomId, AdaxRoomMeasuringValues values) {
         synchronized (roomId) {
             final var entry = cache.computeIfAbsent(roomId, k -> new Entry());
