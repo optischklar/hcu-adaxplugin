@@ -5,7 +5,7 @@
 
 	<groupId>de.nonnull.hcu</groupId>
 	<artifactId>hcu-adax-plugin</artifactId>
-	<version>1.0.0</version>
+	<version>1.0.1-SNAPSHOT</version>
 
 	<name>HCU ADAX Plugin</name>
 
