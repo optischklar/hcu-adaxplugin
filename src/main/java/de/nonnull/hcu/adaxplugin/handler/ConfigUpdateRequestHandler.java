@@ -10,6 +10,7 @@ import static de.nonnull.hcu.adaxplugin.handler.ConfigTemplateRequestHandler.PRO
 import static de.nonnull.hcu.adaxplugin.handler.ConfigTemplateRequestHandler.PROPERTY_ROOM_MODEL_TYPE;
 import static de.nonnull.hcu.adaxplugin.handler.ConfigTemplateRequestHandler.PROPERTY_ROOM_PREFIX;
 import static de.nonnull.hcu.adaxplugin.handler.ConfigTemplateRequestHandler.PROPERTY_ROOM_SET_POINT_TEMPERATURE_OFFSET;
+import static de.nonnull.hcu.adaxplugin.handler.ConfigTemplateRequestHandler.PROPERTY_ROOM_WINDOW_CLOSED_HEATING_DELAY;
 import static de.nonnull.hcu.adaxplugin.handler.ConfigTemplateRequestHandler.createRoomPropertyPrefix;
 
 import java.util.HashMap;
@@ -124,6 +125,8 @@ public class ConfigUpdateRequestHandler extends PluginMessageHandler<ConfigUpdat
                 .valueOf((String) properties.get(prefix + PROPERTY_ROOM_ACTUAL_TEMPERATURE_HANDLING)));
         config.setSetPointTemperatureOffset(
                 ((Number) properties.get(prefix + PROPERTY_ROOM_SET_POINT_TEMPERATURE_OFFSET)).doubleValue());
+        config.setWindowClosedHeatingDelayMinutes(
+                (Integer) properties.get(prefix + PROPERTY_ROOM_WINDOW_CLOSED_HEATING_DELAY));
         config.setExcludeThermostat(Boolean.TRUE.equals(properties.get(prefix + PROPERTY_ROOM_EXCLUDE_THERMOSTAT)));
         config.setExcludeClimateSensor(
                 Boolean.TRUE.equals(properties.get(prefix + PROPERTY_ROOM_EXCLUDE_CLIMATE_SENSOR)));

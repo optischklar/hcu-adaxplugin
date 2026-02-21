@@ -5,6 +5,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import de.eq3.plugin.serialization.DeviceType;
 import de.nonnull.hcu.adaxplugin.adax.model.Home;
 import de.nonnull.hcu.adaxplugin.adax.model.Room;
@@ -14,6 +16,7 @@ import lombok.NonNull;
 
 @Data
 @NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class RoomConfig {
     @NonNull
     private RoomId id;
@@ -30,6 +33,8 @@ public class RoomConfig {
 
     private boolean excludeThermostat = false;
     private boolean excludeClimateSensor = false;
+
+    private Integer windowClosedHeatingDelayMinutes;
 
     public static Stream<RoomConfig> createRoomConfigs(@NonNull List<Home> homes, @NonNull List<Room> rooms) {
         final var idHomeMap = homes.stream().collect(Collectors.toMap(Home::getId, Function.identity()));

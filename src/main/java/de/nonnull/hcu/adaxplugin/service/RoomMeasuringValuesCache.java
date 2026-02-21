@@ -72,6 +72,10 @@ public class RoomMeasuringValuesCache {
         }
     }
 
+    public Optional<HcuRoomMeasuringValues> getHcuValues(@NonNull RoomId roomId) {
+        return Optional.ofNullable(cache.get(roomId)).map(Entry::getHcuValues);
+    }
+
     /**
      * Compares the actual temperature of the given {@link Device} with the actual
      * temperature of the cached ADAX value.

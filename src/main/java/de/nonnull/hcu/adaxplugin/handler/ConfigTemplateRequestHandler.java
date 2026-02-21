@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -33,6 +34,7 @@ public class ConfigTemplateRequestHandler extends PluginMessageHandler<ConfigTem
     static final String PROPERTY_ROOM_SET_POINT_TEMPERATURE_OFFSET = ".setPointTempOfs";
     static final String PROPERTY_ROOM_EXCLUDE_THERMOSTAT = ".exclThermostat";
     static final String PROPERTY_ROOM_EXCLUDE_CLIMATE_SENSOR = ".exclClimateSensor";
+    static final String PROPERTY_ROOM_WINDOW_CLOSED_HEATING_DELAY = ".winClosedHeatingDelay";
 
     private static final String GROUP_ID_CREDENTIALS = "credentials";
 
@@ -157,12 +159,21 @@ public class ConfigTemplateRequestHandler extends PluginMessageHandler<ConfigTem
         setPointTemperatureOffset.setGroupId(groupId);
         setPointTemperatureOffset.setOrder(3);
 
+        final var windowClosedHeatingDelayMinutes = new PropertyTemplate("Window closed heating delay",
+                "The delay in minutes that must elapse before heating resumes after the window is closed.", false,
+                PropertyType.INTEGER);
+        windowClosedHeatingDelayMinutes.setDefaultValue("0");
+        windowClosedHeatingDelayMinutes
+                .setCurrentValue(Optional.ofNullable(config.getWindowClosedHeatingDelayMinutes()).orElse(0).toString());
+        windowClosedHeatingDelayMinutes.setGroupId(groupId);
+        windowClosedHeatingDelayMinutes.setOrder(4);
+
         final var excludeThermostat = new PropertyTemplate("Exclude thermostat",
                 "Specifies if the thermostat device is excluded.", false, PropertyType.BOOLEAN);
         excludeThermostat.setDefaultValue(Boolean.FALSE.toString());
         excludeThermostat.setCurrentValue(Boolean.toString(config.isExcludeThermostat()));
         excludeThermostat.setGroupId(groupId);
-        excludeThermostat.setOrder(4);
+        excludeThermostat.setOrder(5);
 
         final var excludeClimateSensor = new PropertyTemplate("Exclude climate sensor",
                 "Specifies if the climate sensor device is excluded. The device is only availabe if the actual temperature handling is set to "
@@ -171,7 +182,7 @@ public class ConfigTemplateRequestHandler extends PluginMessageHandler<ConfigTem
         excludeClimateSensor.setDefaultValue(Boolean.FALSE.toString());
         excludeClimateSensor.setCurrentValue(Boolean.toString(config.isExcludeThermostat()));
         excludeClimateSensor.setGroupId(groupId);
-        excludeClimateSensor.setOrder(5);
+        excludeClimateSensor.setOrder(6);
 
         final var propertyPrefix = createRoomPropertyPrefix(config.getId());
 
@@ -179,6 +190,7 @@ public class ConfigTemplateRequestHandler extends PluginMessageHandler<ConfigTem
                 propertyPrefix + PROPERTY_ROOM_MODEL_TYPE, modelType,
                 propertyPrefix + PROPERTY_ROOM_ACTUAL_TEMPERATURE_HANDLING, actualTemperatureHandling,
                 propertyPrefix + PROPERTY_ROOM_SET_POINT_TEMPERATURE_OFFSET, setPointTemperatureOffset,
+                propertyPrefix + PROPERTY_ROOM_WINDOW_CLOSED_HEATING_DELAY, windowClosedHeatingDelayMinutes,
                 propertyPrefix + PROPERTY_ROOM_EXCLUDE_THERMOSTAT, excludeThermostat,
                 propertyPrefix + PROPERTY_ROOM_EXCLUDE_CLIMATE_SENSOR, excludeClimateSensor);
     }
