@@ -40,10 +40,6 @@ public class SyncAdaxHeatingVerticle extends AbstractVerticle implements Handler
         boolean isDue(@NonNull Instant reference) {
             return !dueTime.isAfter(reference);
         }
-
-        BufferEntry withValuesOf(@NonNull BufferEntry aEntry) {
-            return toBuilder().values(aEntry.getValues()).build();
-        }
     }
 
     private final ConcurrentMap<RoomId, BufferEntry> buffer = new ConcurrentHashMap<>();
@@ -70,16 +66,15 @@ public class SyncAdaxHeatingVerticle extends AbstractVerticle implements Handler
         final var roomId = event.getRoomId();
         final var values = HcuRoomMeasuringValues.fromGroupJsonObject(event.getHcuHeatingGroup());
         final var entry = createEntry(roomId, values);
-        buffer.merge(roomId, entry, (oldEntry, newEntry) -> oldEntry.withValuesOf(newEntry));
+        buffer.merge(roomId, entry, this::mergeEntries);
     }
 
     private BufferEntry createEntry(@NonNull RoomId roomId, @NonNull HcuRoomMeasuringValues values) {
-        final var delayHeating = context.getRoomMeasuringValuesCache().getHcuValues(roomId).map(prevValues -> {
-            return prevValues.isWindowOpen() && !values.isWindowOpen();
-        }).orElse(false);
+        final var windowClosing = context.getRoomMeasuringValuesCache().getHcuValues(roomId)
+                .map(prevValues -> prevValues.isWindowClosing(values)).orElse(false);
 
         final Instant dueTime;
-        if (delayHeating) {
+        if (windowClosing) {
             dueTime = Instant.now().plus(getWindowClosedHeatingDelayMinutes(roomId), ChronoUnit.MINUTES);
         } else {
             dueTime = Instant.now();
@@ -94,6 +89,12 @@ public class SyncAdaxHeatingVerticle extends AbstractVerticle implements Handler
                 .map(rc -> rc.get(roomId))
                 .map(RoomConfig::getWindowClosedHeatingDelayMinutes)
                 .orElse(0);
+    }
+
+    private BufferEntry mergeEntries(@NonNull BufferEntry oldEntry, @NonNull BufferEntry newEntry) {
+        final var windowOpening = oldEntry.getValues().isWindowOpening(newEntry.getValues());
+        final var dueTime = windowOpening ? newEntry.getDueTime() : oldEntry.getDueTime();
+        return newEntry.toBuilder().dueTime(dueTime).build();
     }
 
     private void handleBuffer(Long timerId) {

@@ -21,6 +21,18 @@ public class HcuRoomMeasuringValues {
     private final Double actualTemperature;
     private final String windowState;
 
+    public boolean isWindowOpening(@NonNull HcuRoomMeasuringValues next) {
+        return isWindowClosed() && next.isWindowOpen();
+    }
+
+    public boolean isWindowClosing(@NonNull HcuRoomMeasuringValues next) {
+        return isWindowOpen() && next.isWindowClosed();
+    }
+
+    public boolean isWindowClosed() {
+        return !isWindowOpen();
+    }
+
     public boolean isWindowOpen() {
         return WINDOW_STATE_OPEN.equals(windowState);
     }
