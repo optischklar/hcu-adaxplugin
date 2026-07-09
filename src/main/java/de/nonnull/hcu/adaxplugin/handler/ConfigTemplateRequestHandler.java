@@ -180,7 +180,7 @@ public class ConfigTemplateRequestHandler extends PluginMessageHandler<ConfigTem
                         + ActualTemperatureHandling.EXTRA_DEVICE + ".",
                         false, PropertyType.BOOLEAN);
         excludeClimateSensor.setDefaultValue(Boolean.FALSE.toString());
-        excludeClimateSensor.setCurrentValue(Boolean.toString(config.isExcludeThermostat()));
+        excludeClimateSensor.setCurrentValue(Boolean.toString(config.isExcludeClimateSensor()));
         excludeClimateSensor.setGroupId(groupId);
         excludeClimateSensor.setOrder(6);
 

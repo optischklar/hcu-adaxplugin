@@ -92,9 +92,11 @@ public class PersistenceService {
     }
 
     public void saveRoomConfigurations(Map<RoomId, RoomConfig> configs) {
-        final var config = data().getConfiguration();
-
-        assert config != null;
+        var config = data().getConfiguration();
+        if (config == null) {
+            config = new Configuration();
+            data().setConfiguration(config);
+        }
 
         config.setRoomConfigurations(configs);
         persist();

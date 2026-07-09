@@ -29,7 +29,7 @@ public class RoomId {
             throw new IllegalArgumentException("Invalid RoomId: " + identifier);
         }
         try {
-            return new RoomId(Integer.parseInt(parts[0]), Integer.parseInt(parts[1]));
+            return new RoomId(Long.parseLong(parts[0]), Long.parseLong(parts[1]));
         } catch (final NumberFormatException e) {
             throw new IllegalArgumentException("Invalid RoomId: " + identifier);
         }

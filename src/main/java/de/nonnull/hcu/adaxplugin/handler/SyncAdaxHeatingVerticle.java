@@ -141,11 +141,15 @@ public class SyncAdaxHeatingVerticle extends AbstractVerticle implements Handler
                     .convertHcuSetPointTemperatureToAdaxTargetTemperature(roomConfig,
                             values.getSetPointTemperature());
 
-            if (targetTemperature == null) {
-                if (heatingEnabled) {
-                    LOGGER.error("Ignoring room {}: target temperature not set", roomId);
-                    return null;
-                }
+            if (targetTemperature == null && heatingEnabled) {
+                LOGGER.error("Ignoring room {}: target temperature not set", roomId);
+                return null;
+            }
+
+            // When heating is disabled the target temperature is forced to the minimum.
+            // Apply this before the change check so that it compares against the value
+            // that is actually sent to and cached for ADAX.
+            if (!heatingEnabled) {
                 targetTemperature = AdaxRemoteClient.MIN_TARGET_TEMPERATURE;
             }
 
@@ -163,14 +167,7 @@ public class SyncAdaxHeatingVerticle extends AbstractVerticle implements Handler
         });
     }
 
-    private void controlRoom(RoomId roomId, boolean aHeatingEnabled, int aTargetTemperature) {
-        final int targetTemperature;
-        if (aHeatingEnabled) {
-            targetTemperature = aTargetTemperature;
-        } else {
-            targetTemperature = AdaxRemoteClient.MIN_TARGET_TEMPERATURE;
-        }
-
+    private void controlRoom(RoomId roomId, boolean aHeatingEnabled, int targetTemperature) {
         context.getAdaxClient().controlRoom(roomId, aHeatingEnabled, targetTemperature, ar -> {
             if (ar.succeeded()) {
                 final var response = ar.result();

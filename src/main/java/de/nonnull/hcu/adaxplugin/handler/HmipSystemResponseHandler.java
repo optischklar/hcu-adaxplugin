@@ -29,6 +29,11 @@ public class HmipSystemResponseHandler extends PluginMessageHandler<HmipSystemRe
         final var groups = body.getJsonObject("groups");
         final var devices = body.getJsonObject("devices");
 
+        if (groups == null || devices == null) {
+            LOGGER.warn("Hmip system response has no groups or devices, ignoring");
+            return;
+        }
+
         var handledRooms = 0;
 
         for (final var key : devices.fieldNames()) {
@@ -49,15 +54,24 @@ public class HmipSystemResponseHandler extends PluginMessageHandler<HmipSystemRe
             }
 
             final var functionalChannels = device.getJsonObject("functionalChannels");
+            if (functionalChannels == null) {
+                continue;
+            }
             final var groupsOfDevice = new ArrayList<String>();
             for (final var channelKey : functionalChannels.fieldNames()) {
                 final var channel = functionalChannels.getJsonObject(channelKey);
                 final var channelGroups = channel.getJsonArray("groups");
+                if (channelGroups == null) {
+                    continue;
+                }
                 channelGroups.stream().map(String.class::cast).forEach(groupsOfDevice::add);
             }
 
             for (final var groupId : groupsOfDevice) {
                 final var group = groups.getJsonObject(groupId);
+                if (group == null) {
+                    continue;
+                }
                 final var groupType = group.getString("type");
 
                 if (!GROUP_TYPE_HEATING.equals(groupType)) {
