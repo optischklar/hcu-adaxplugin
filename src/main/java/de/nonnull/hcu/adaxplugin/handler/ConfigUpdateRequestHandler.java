@@ -51,7 +51,7 @@ public class ConfigUpdateRequestHandler extends PluginMessageHandler<ConfigUpdat
             return;
         }
 
-        LOGGER.info("Properties: {}", properties);
+        LOGGER.info("Received configuration properties: {}", properties.keySet());
 
         final var apiUrl = (String) properties.get(PROPERTY_ADAX_API_URL);
         final var clientId = (String) properties.get(PROPERTY_ADAX_CLIENT_ID);

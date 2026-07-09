@@ -34,9 +34,14 @@ public class HmipSystemEventHandler extends AbstractVerticle implements Handler<
 
         final var body = message.body();
 
+        final var messageBody = body.getJsonObject("body");
+        final var eventTransaction = messageBody == null ? null : messageBody.getJsonObject("eventTransaction");
+        final var events = eventTransaction == null ? null : eventTransaction.getJsonObject("events");
 
-        final var eventTransaction = body.getJsonObject("body").getJsonObject("eventTransaction");
-        final var events = eventTransaction.getJsonObject("events");
+        if (events == null) {
+            LOGGER.warn("Hmip system event has no event transaction, ignoring");
+            return;
+        }
 
         final var eventIndexes = events.fieldNames().stream().sorted().collect(Collectors.toList());
         LOGGER.trace("Got {} events", eventIndexes.size());

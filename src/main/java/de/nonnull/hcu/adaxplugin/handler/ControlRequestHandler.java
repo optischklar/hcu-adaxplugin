@@ -75,6 +75,12 @@ public class ControlRequestHandler extends PluginMessageHandler<ControlRequest> 
             final var targetTemperature = context.getConversionService().convertHcuSetPointTemperatureToAdaxTargetTemperature(
                     roomConfig, setPointTempFeature.get().getSetPointTemperature());
 
+            if (targetTemperature == null) {
+                sendControlRequestResponse(messageId, deviceId, false,
+                        new Error(CONTROL_REQUEST_FAILED, "No target temperature set"));
+                return;
+            }
+
             LOGGER.debug("Setting target temperature of room {} to {}", roomId.toIdentifier(), targetTemperature);
 
             context.getAdaxClient().controlRoom(roomId, true, targetTemperature, ar -> {

@@ -4,6 +4,8 @@ import static de.nonnull.hcu.adaxplugin.adax.HttpResponseUtil.createFailedFuture
 import static de.nonnull.hcu.adaxplugin.adax.HttpResponseUtil.isOk;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 import de.nonnull.hcu.adaxplugin.service.PersistenceService;
@@ -24,6 +26,14 @@ public class TokenManager {
 
     private final AtomicReference<Token> tokenRef = new AtomicReference<>();
 
+    /**
+     * Handlers waiting for an in-flight token fetch. Guarded by {@link #pending}
+     * itself. As long as this list is non-empty a fetch is in progress, so
+     * concurrent {@link #getValidToken} calls from different event-loop threads are
+     * coalesced into a single authentication/refresh request.
+     */
+    private final List<Handler<AsyncResult<Token>>> pending = new ArrayList<>();
+
     public TokenManager(WebClient aWebClient, PersistenceService aPersistenceService) {
         webClient = aWebClient;
         persistenceService = aPersistenceService;
@@ -31,32 +41,46 @@ public class TokenManager {
 
     public void getValidToken(Handler<AsyncResult<Token>> handler) {
         final var token = tokenRef.get();
-        if (token == null || token.isExpired()) {
-            if (token == null) {
-                authenticate(handler);
-            } else {
-                final var refreshToken = token.getRefreshToken();
-                clearToken();
-                refresh(refreshToken, handler);
-            }
-        } else {
+        if (token != null && !token.isExpired()) {
             handler.handle(Future.succeededFuture(token));
+            return;
+        }
+
+        final boolean startFetch;
+        synchronized (pending) {
+            startFetch = pending.isEmpty();
+            pending.add(handler);
+        }
+
+        if (startFetch) {
+            fetchToken();
         }
     }
 
-    private void authenticate(Handler<AsyncResult<Token>> handler) {
+    private void fetchToken() {
+        final var token = tokenRef.get();
+        final var refreshToken = token == null ? null : token.getRefreshToken();
+        if (refreshToken != null) {
+            clearToken();
+            refresh(refreshToken);
+        } else {
+            authenticate();
+        }
+    }
+
+    private void authenticate() {
         LOGGER.debug("Authenticate");
 
         final var config = persistenceService.getConfiguration();
         if (config.isEmpty()) {
-            handler.handle(Future.failedFuture("Couldn't find plugin configuration"));
+            completeFetch(Future.failedFuture("Couldn't find plugin configuration"));
             return;
         }
 
         final var credentials = config.get().getAdaxCredentials();
 
         if (credentials == null) {
-            handler.handle(Future.failedFuture("Couldn't find ADAX credentials"));
+            completeFetch(Future.failedFuture("Couldn't find ADAX credentials"));
             return;
         }
 
@@ -70,32 +94,27 @@ public class TokenManager {
                 .sendForm(form, ar -> {
                     if (isOk(ar)) {
                         LOGGER.info("Authentication succeeded");
-                        parseTokenResponse(credentials.getApiUrl(), ar.result(), handler);
+                        parseTokenResponse(credentials.getApiUrl(), ar.result());
                     } else {
                         LOGGER.error("Authentication failed");
-                        handler.handle(createFailedFuture(ar));
+                        completeFetch(createFailedFuture(ar));
                     }
                 });
     }
 
-    private void refresh(String refreshToken, Handler<AsyncResult<Token>> handler) {
+    private void refresh(String refreshToken) {
         LOGGER.debug("Refresh");
-
-        if (refreshToken == null) {
-            authenticate(handler);
-            return;
-        }
 
         final var config = persistenceService.getConfiguration();
         if (config.isEmpty()) {
-            handler.handle(Future.failedFuture("Couldn't find plugin configuration"));
+            completeFetch(Future.failedFuture("Couldn't find plugin configuration"));
             return;
         }
 
         final var credentials = config.get().getAdaxCredentials();
 
         if (credentials == null) {
-            handler.handle(Future.failedFuture("Couldn't find ADAX credentials"));
+            completeFetch(Future.failedFuture("Couldn't find ADAX credentials"));
             return;
         }
 
@@ -108,29 +127,38 @@ public class TokenManager {
                 .sendForm(form, ar -> {
                     if (isOk(ar)) {
                         LOGGER.info("Refresh succeeded");
-                        parseTokenResponse(credentials.getApiUrl(), ar.result(), handler);
+                        parseTokenResponse(credentials.getApiUrl(), ar.result());
                     } else {
                         LOGGER.error("Refresh failed. Trying to authenticate.");
-                        authenticate(handler);
+                        authenticate();
                     }
                 });
     }
 
-    private void parseTokenResponse(String apiUrl, HttpResponse<Buffer> response, Handler<AsyncResult<Token>> handler) {
+    private void parseTokenResponse(String apiUrl, HttpResponse<Buffer> response) {
         try {
             final JsonObject json = response.bodyAsJsonObject();
             if (json.containsKey("access_token")) {
                 final var token = Token.builder().apiUrl(apiUrl).tokenData(json).createdAt(Instant.now()).build();
                 LOGGER.info("New token will expire at {}", token.getExpiry());
                 tokenRef.set(token);
-                handler.handle(Future.succeededFuture(token));
+                completeFetch(Future.succeededFuture(token));
             } else {
-                handler.handle(
+                completeFetch(
                         Future.failedFuture("Token response does not contain access_token: " + json.encodePrettily()));
             }
         } catch (final Exception e) {
-            handler.handle(Future.failedFuture(e));
+            completeFetch(Future.failedFuture(e));
         }
+    }
+
+    private void completeFetch(AsyncResult<Token> result) {
+        final List<Handler<AsyncResult<Token>>> toNotify;
+        synchronized (pending) {
+            toNotify = new ArrayList<>(pending);
+            pending.clear();
+        }
+        toNotify.forEach(handler -> handler.handle(result));
     }
 
     public void clearToken() {

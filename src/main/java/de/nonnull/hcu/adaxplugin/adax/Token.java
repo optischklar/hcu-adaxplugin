@@ -1,6 +1,7 @@
 package de.nonnull.hcu.adaxplugin.adax;
 
 import java.time.Instant;
+import java.util.Optional;
 
 import io.vertx.core.json.JsonObject;
 import lombok.Builder;
@@ -11,6 +12,7 @@ import lombok.Value;
 @Builder
 public class Token {
     private static final long EXPIRY_GAP_SECONDS = 30;
+    private static final long DEFAULT_VALIDITY_SECONDS = 3600;
 
     @NonNull
     private final String apiUrl;
@@ -24,11 +26,9 @@ public class Token {
     }
 
     public Instant getExpiry() {
-        final Long expiresIn = tokenData.getLong("expires_in");
-        if (expiresIn != null) {
-            return createdAt.plusSeconds(expiresIn - EXPIRY_GAP_SECONDS);
-        }
-        return createdAt;
+        final long expiresIn = Optional.ofNullable(tokenData.getLong("expires_in"))
+                .orElse(DEFAULT_VALIDITY_SECONDS);
+        return createdAt.plusSeconds(expiresIn - EXPIRY_GAP_SECONDS);
     }
 
     public String getAccessToken() {
