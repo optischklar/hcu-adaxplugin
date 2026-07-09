@@ -1,5 +1,6 @@
 package de.nonnull.hcu.adaxplugin.service;
 
+import de.nonnull.hcu.adaxplugin.adax.AdaxRemoteClient;
 import de.nonnull.hcu.adaxplugin.config.RoomConfig;
 import lombok.NonNull;
 
@@ -21,6 +22,12 @@ public class ConversionService {
         if (setPointTemperature == null) {
             return null;
         }
-        return (int) ((setPointTemperature + roomConfig.getSetPointTemperatureOffset()) * 100);
+        final var targetTemperature = (int) ((setPointTemperature + roomConfig.getSetPointTemperatureOffset()) * 100);
+        return clamp(targetTemperature, AdaxRemoteClient.MIN_TARGET_TEMPERATURE,
+                AdaxRemoteClient.MAX_TARGET_TEMPERATURE);
+    }
+
+    private static int clamp(int value, int min, int max) {
+        return Math.max(min, Math.min(max, value));
     }
 }

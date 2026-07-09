@@ -22,6 +22,9 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class AdaxRemoteClient {
+    public static final int MIN_TARGET_TEMPERATURE = 500;
+    public static final int MAX_TARGET_TEMPERATURE = 3500;
+    
     private final WebClient webClient;
     private final TokenManager tokenManager;
     private final RoomMeasuringValuesCache valuesCache;

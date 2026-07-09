@@ -7,6 +7,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import de.nonnull.hcu.adaxplugin.PluginContext;
+import de.nonnull.hcu.adaxplugin.adax.AdaxRemoteClient;
 import de.nonnull.hcu.adaxplugin.adax.model.ControlResponseRoom;
 import de.nonnull.hcu.adaxplugin.adax.model.ControlStatus;
 import de.nonnull.hcu.adaxplugin.config.Configuration;
@@ -145,7 +146,7 @@ public class SyncAdaxHeatingVerticle extends AbstractVerticle implements Handler
                     LOGGER.error("Ignoring room {}: target temperature not set", roomId);
                     return null;
                 }
-                targetTemperature = 0;
+                targetTemperature = AdaxRemoteClient.MIN_TARGET_TEMPERATURE;
             }
 
             if (context.getRoomMeasuringValuesCache().heatingHasChanged(roomId, heatingEnabled, targetTemperature)) {
@@ -162,18 +163,25 @@ public class SyncAdaxHeatingVerticle extends AbstractVerticle implements Handler
         });
     }
 
-    private void controlRoom(RoomId roomId, boolean heatingEnabled, int targetTemperature) {
-        context.getAdaxClient().controlRoom(roomId, heatingEnabled, targetTemperature, ar -> {
+    private void controlRoom(RoomId roomId, boolean aHeatingEnabled, int aTargetTemperature) {
+        final int targetTemperature;
+        if (aHeatingEnabled) {
+            targetTemperature = aTargetTemperature;
+        } else {
+            targetTemperature = AdaxRemoteClient.MIN_TARGET_TEMPERATURE;
+        }
+
+        context.getAdaxClient().controlRoom(roomId, aHeatingEnabled, targetTemperature, ar -> {
             if (ar.succeeded()) {
                 final var response = ar.result();
                 final var status = response.getRooms().stream().filter(r -> r.getId() == roomId.getRoomId())
                         .map(ControlResponseRoom::getStatus).findAny();
                 if (status.filter(s -> s == ControlStatus.OK).isPresent()) {
                     LOGGER.info("Successfully set temperature of room {} to {} with heating enabled {}",
-                            roomId.toIdentifier(), targetTemperature, heatingEnabled);
+                            roomId.toIdentifier(), targetTemperature, aHeatingEnabled);
                 } else {
                     LOGGER.error("Failed to set temperature of room {} to {} with heating enabled {}: {}",
-                            roomId.toIdentifier(), targetTemperature, heatingEnabled,
+                            roomId.toIdentifier(), targetTemperature, aHeatingEnabled,
                             status.map(ControlStatus::name).orElse("not found"));
                 }
             } else {
