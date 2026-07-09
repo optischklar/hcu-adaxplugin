@@ -23,10 +23,15 @@ installed into the local Maven repo first — see the README for the two upstrea
 mvn clean package                              # build the fat jar (artifact-with-dependencies)
 mvn clean package docker:build docker:save     # build + produce target/*-latest.tar.gz to upload to the HCU
 mvn exec:java -Dexec.mainClass="de.nonnull.hcu.adaxplugin.PluginStarter"   # run locally
+mvn test                                       # run the JUnit test suite
+mvn test -Dtest=TokenManagerTest               # run a single test class
+mvn test -Dtest=TokenManagerTest#getValidToken_coalescesConcurrentRequests   # run a single test
 ```
 
-There are **no tests** in the repo (JUnit is declared but `src/test` does not exist).
-Java release target is **11**. The Docker image targets **linux/arm64** (the HCU is ARM).
+Tests use **JUnit 4** and live under `src/test/java`. `TokenManagerTest` is an
+integration-style test that spins up a real local Vert.x HTTP server (no mocking
+framework is used). Java release target is **11**. The Docker image targets
+**linux/arm64** (the HCU is ARM).
 
 ### Local run configuration
 
