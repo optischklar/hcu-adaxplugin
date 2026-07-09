@@ -1,10 +1,10 @@
 package de.nonnull.hcu.adaxplugin.service;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -28,11 +28,11 @@ public class RoomMeasuringValuesCache {
 
     @Data
     private static class Entry {
-        private AdaxRoomMeasuringValues adaxValues;
-        private HcuRoomMeasuringValues hcuValues;
+        private volatile AdaxRoomMeasuringValues adaxValues;
+        private volatile HcuRoomMeasuringValues hcuValues;
     }
 
-    private final Map<RoomId, Entry> cache = new HashMap<>();
+    private final Map<RoomId, Entry> cache = new ConcurrentHashMap<>();
 
     public void putAdaxValuesFromContent(@NonNull ContentResponse content) {
         final var idHomeMap = content.getHomes().stream().collect(Collectors.toMap(Home::getId, Function.identity()));
@@ -56,20 +56,14 @@ public class RoomMeasuringValuesCache {
     }
 
     public void putAdaxValues(@NonNull RoomId roomId, AdaxRoomMeasuringValues values) {
-        synchronized (roomId) {
-            final var entry = cache.computeIfAbsent(roomId, k -> new Entry());
-            entry.setAdaxValues(values);
-            LOGGER.debug("Put ADAX values for room {}", roomId);
-        }
+        cache.computeIfAbsent(roomId, k -> new Entry()).setAdaxValues(values);
+        LOGGER.debug("Put ADAX values for room {}", roomId);
     }
 
     public void putHcuValues(@NonNull RoomId roomId, HcuRoomMeasuringValues values) {
-        synchronized (roomId) {
-            final var entry = cache.computeIfAbsent(roomId, k -> new Entry());
-            entry.setHcuValues(values);
-            LOGGER.debug("Put HCU values of group {} for room {}",
-                    Optional.ofNullable(values).map(HcuRoomMeasuringValues::getGroupId).orElse(null), roomId);
-        }
+        cache.computeIfAbsent(roomId, k -> new Entry()).setHcuValues(values);
+        LOGGER.debug("Put HCU values of group {} for room {}",
+                Optional.ofNullable(values).map(HcuRoomMeasuringValues::getGroupId).orElse(null), roomId);
     }
 
     public Optional<HcuRoomMeasuringValues> getHcuValues(@NonNull RoomId roomId) {
@@ -96,7 +90,7 @@ public class RoomMeasuringValuesCache {
                 .map(AdaxRoomMeasuringValues::getTemperature)
                 .map(conversionService::convertAdaxToHcuTemperature)
                 .orElse(null);
-        return Objects.equals(deviceActualTemperature, adaxActualTemperature);
+        return !Objects.equals(deviceActualTemperature, adaxActualTemperature);
     }
 
     /**
